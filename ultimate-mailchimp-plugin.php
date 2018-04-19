@@ -38,14 +38,13 @@ class UltimateMailChimpPlugin {
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
             WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
-            // WP_CLI::add_command( 'ultimate-mailchimp get-webhook-url', array( $this, 'sync_users' ) );
+            WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
 
         };
 
     }
 
     function sync_users( $args, $assoc_args ){
-
 
         $args = array(
 
@@ -71,23 +70,9 @@ class UltimateMailChimpPlugin {
 
         $users = get_users( $args );
 
-        //
-        // echo "<pre>";
-        // print_r($user);
-        // echo "</pre>";
-
-        $this->connect_to_mailchimp();
-
-        foreach( $users as $user ){
-            echo $user->data->user_email . "\n";
-            $this->sync_user_to_mailchimp( $user );
-        }
-
-        echo WP_CLI::success( "List synced");
-
+        $this->send_batch_to_mailchimp( $users );
 
     }
-
 
     private function connect_to_mailchimp(){
 
@@ -111,58 +96,42 @@ class UltimateMailChimpPlugin {
 
     }
 
-    private function sync_user_to_mailchimp( $user = object ){
+    private function send_batch_to_mailchimp( $users = array() ){
 
-        // echo WP_CLI::success( "Synced!");
+        $this->connect_to_mailchimp();
 
-        //ASTODO make sure email is not blank
-        // $user_on_list = $this->is_user_on_mailchimp_list( $user->data->user_email );
+        $batch_process = $this->MailChimp->new_batch();
+
+        foreach( $users as $key => $user ){
+
+            $batch_process->post( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members", [
+                'email_address' => $user->data->user_email,
+                'status' => 'pending', // subscribed - unsubscribed - cleaned - pending
+            ]);
+
+        }
+
+        $result = $batch_process->execute();
+
+        echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
+
+
+
+        // $result = $batch_process->check_status();
         //
-        // $result = $this->MailChimp->get( "batches" );
+        // echo "--------------------------------------------";
         //
         // echo "<pre>";
         // print_r($result);
         // echo "</pre>";
-        // die();
 
 
-
-        // die();
-
-        // ------------------------------------
-
-        $batch_process = $this->MailChimp->new_batch();
-
-        $batch_process->post("op1", "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members", [
-            'email_address' => 'david+anthonydarke@atomicsmash.co.uk',
-            'status'        => 'pending', // subscribed - unsubscribed - cleaned - pending
-        ]);
-
-        $result = $batch_process->execute();
-
-        echo "<pre>";
-        print_r($result);
-        echo "</pre>";
-
-
-        sleep(14);
-
-        // $this->MailChimp->new_batch( $result['id'] );
-        $result = $batch_process->check_status();
-
-        echo "--------------------------------------------";
-
-        echo "<pre>";
-        print_r($result);
-        echo "</pre>";
-
-        die();
 
 
         //return true;
 
 
-        if ( $user_on_list ) {
+        // if ( $user_on_list ) {
 
             // User has meta key so they are updating their email
             // $subscriber_hash = $this->MailChimp->subscriberHash( $previous_email );
@@ -176,7 +145,7 @@ class UltimateMailChimpPlugin {
             //     'status' => $user_status
             // ]);
 
-        } else {
+        // } else {
 
             // $subscriber_hash = $this->MailChimp->subscriberHash( $userDetails->data->user_email );
             //
@@ -188,7 +157,7 @@ class UltimateMailChimpPlugin {
             //    'timestamp_opt' => $user->data->user_registered
             // ]);
 
-        }
+        // }
 
 
         // MailChimp->success()) {
@@ -199,6 +168,71 @@ class UltimateMailChimpPlugin {
 
 
     }
+
+
+    public function get_batches( $users = array() ){
+
+        $this->connect_to_mailchimp();
+
+        $result = $this->MailChimp->get( "batches" );
+
+        //ASTODO need to order this output by date order
+        if( count( $result['batches'] ) > 0 ){
+            foreach( $result['batches'] as $batch ){
+
+                echo $batch['id'] . " | ";
+                echo $batch['status'] . " | ";
+                echo $this->time_ago( $batch['submitted_at'] );
+
+
+                echo "\n";
+
+                // [id] => 02457dc1c8
+                // [status] => finished
+                // [total_operations] => 1
+                // [finished_operations] => 1
+                // [errored_operations] => 1
+                // [submitted_at] => 2018-04-19T19:33:01+00:00
+                // [completed_at] => 20
+                // [response_body_url] =>
+
+            }
+        }
+
+
+    }
+
+    private function time_ago( $datetime, $full = false ){
+
+        $now = new DateTime;
+        $ago = new DateTime($datetime);
+        $diff = $now->diff($ago);
+
+        $diff->w = floor($diff->d / 7);
+        $diff->d -= $diff->w * 7;
+
+        $string = array(
+            'y' => 'year',
+            'm' => 'month',
+            'w' => 'week',
+            'd' => 'day',
+            'h' => 'hour',
+            'i' => 'minute',
+            's' => 'second',
+        );
+        foreach ($string as $k => &$v) {
+            if ($diff->$k) {
+                $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+            } else {
+                unset($string[$k]);
+            }
+        }
+
+        if (!$full) $string = array_slice($string, 0, 1);
+        return $string ? implode(', ', $string) . ' ago' : 'just now';
+
+    }
+
 
 }
 
