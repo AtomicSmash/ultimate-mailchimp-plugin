@@ -18,6 +18,7 @@
   ],
   "type": "wordpress-plugin",
   "require": {
-      "drewm/mailchimp-api" : "*"
+      "drewm/mailchimp-api" : "*",
+      "monolog/monolog" : "*"
   }
 }

@@ -14,8 +14,22 @@
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
+use \DrewM\MailChimp\MailChimp;
+use \DrewM\MailChimp\Batch;
+
+
 require __DIR__ . '/vendor/autoload.php';
 
+// use Monolog\Logger;
+// use Monolog\Handler\StreamHandler;
+//
+// // create a log channel
+// $log = new Logger('name');
+// $log->pushHandler(new StreamHandler('path/to/your.log', Logger::WARNING));
+//
+// // add records to the log
+// $log->warning('Foo');
+// $log->error('Bar');
 
 class UltimateMailChimpPlugin {
 
@@ -29,7 +43,6 @@ class UltimateMailChimpPlugin {
         };
 
     }
-
 
     function sync_users( $args, $assoc_args ){
 
@@ -67,10 +80,10 @@ class UltimateMailChimpPlugin {
 
         foreach( $users as $user ){
             echo $user->data->user_email . "\n";
-            $this->send_user_to_mailchimp( $user );
+            $this->sync_user_to_mailchimp( $user );
         }
 
-        echo WP_CLI::success( "Hello!");
+        echo WP_CLI::success( "List synced");
 
 
     }
@@ -84,38 +97,72 @@ class UltimateMailChimpPlugin {
 
     }
 
-
-
-
-    private function is_user_in_mailchimp_list( $user_email = "" ){
+    private function is_user_on_mailchimp_list( $user_email = "" ){
 
         $subscriber_hash = $this->MailChimp->subscriberHash( $user_email );
 
-
         $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash );
 
-        if($result['status'] == '404') return false;
-        return true;
-
+        if($result['status'] == '404'){
+            return false;
+        }else{
+            return true;
+        }
 
     }
 
-
-
-    private function send_user_to_mailchimp( $user = object ){
+    private function sync_user_to_mailchimp( $user = object ){
 
         // echo WP_CLI::success( "Synced!");
 
-
         //ASTODO make sure email is not blank
-        $user_on_list = $this->is_user_in_mailchimp_list( $user->data->user_email );
+        // $user_on_list = $this->is_user_on_mailchimp_list( $user->data->user_email );
+        //
+        // $result = $this->MailChimp->get( "batches" );
+        //
+        // echo "<pre>";
+        // print_r($result);
+        // echo "</pre>";
+        // die();
+
+
+
+        // die();
+
+        // ------------------------------------
+
+        $batch_process = $this->MailChimp->new_batch();
+
+        $batch_process->post("op1", "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members", [
+            'email_address' => 'david+anthonydarke@atomicsmash.co.uk',
+            'status'        => 'pending', // subscribed - unsubscribed - cleaned - pending
+        ]);
+
+        $result = $batch_process->execute();
+
+        echo "<pre>";
+        print_r($result);
+        echo "</pre>";
+
+
+        sleep(14);
+
+        // $this->MailChimp->new_batch( $result['id'] );
+        $result = $batch_process->check_status();
+
+        echo "--------------------------------------------";
+
+        echo "<pre>";
+        print_r($result);
+        echo "</pre>";
+
+        die();
 
 
         //return true;
 
 
         if ( $user_on_list ) {
-
 
             // User has meta key so they are updating their email
             // $subscriber_hash = $this->MailChimp->subscriberHash( $previous_email );
@@ -131,7 +178,6 @@ class UltimateMailChimpPlugin {
 
         } else {
 
-
             // $subscriber_hash = $this->MailChimp->subscriberHash( $userDetails->data->user_email );
             //
             // // Use PUT to insert or update a record
@@ -143,6 +189,14 @@ class UltimateMailChimpPlugin {
             // ]);
 
         }
+
+
+        // MailChimp->success()) {
+        // 	print_r($result);
+        // } else {
+        // 	echo $MailChimp->getLastError();
+        // }
+
 
     }
 
