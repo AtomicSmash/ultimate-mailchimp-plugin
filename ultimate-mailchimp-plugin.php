@@ -63,6 +63,7 @@ class UltimateMailChimpPlugin {
         // print_r($user);
         // echo "</pre>";
 
+        $this->connect_to_mailchimp();
 
         foreach( $users as $user ){
             echo $user->data->user_email . "\n";
@@ -77,47 +78,71 @@ class UltimateMailChimpPlugin {
 
     private function connect_to_mailchimp(){
 
-        //ASTODO Add check to make sure constant is set
+        //ASTODO Add check to make sure constant is set ULTIMATE_MAILCHIMP_API_KEY
+        //ASTODO Make sure user list constant exists ULTIMATE_MAILCHIMP_LIST_ID
         $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
 
     }
 
 
+
+
+    private function is_user_in_mailchimp_list( $user_email = "" ){
+
+        $subscriber_hash = $this->MailChimp->subscriberHash( $user_email );
+
+
+        $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash );
+
+        if($result['status'] == '404') return false;
+        return true;
+
+
+    }
+
+
+
     private function send_user_to_mailchimp( $user = object ){
 
-        $this->connect_to_mailchimp();
+        // echo WP_CLI::success( "Synced!");
 
 
-        if (  ) {
+        //ASTODO make sure email is not blank
+        $user_on_list = $this->is_user_in_mailchimp_list( $user->data->user_email );
+
+
+        //return true;
+
+
+        if ( $user_on_list ) {
 
 
             // User has meta key so they are updating their email
-            $subscriber_hash = $this->MailChimp->subscriberHash( $previous_email );
-
-            // Update the merge fields with the new email
-            $mailchimp_merge_fields['EMAIL'] = $userDetails->data->user_email;
-
-            // Update the existing user, using PATCH
-            $result = $this->MailChimp->patch("lists/".MAILCHIMP_LIST_ID."/members/$subscriber_hash", [
-                'merge_fields' => $mailchimp_merge_fields,
-                'status' => $user_status
-            ]);
+            // $subscriber_hash = $this->MailChimp->subscriberHash( $previous_email );
+            //
+            // // Update the merge fields with the new email
+            // $mailchimp_merge_fields['EMAIL'] = $userDetails->data->user_email;
+            //
+            // // Update the existing user, using PATCH
+            // $result = $this->MailChimp->patch( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
+            //     'merge_fields' => $mailchimp_merge_fields,
+            //     'status' => $user_status
+            // ]);
 
         } else {
 
 
-            $subscriber_hash = $this->MailChimp->subscriberHash( $userDetails->data->user_email );
-
-            // Use PUT to insert or update a record
-            $result = $this->MailChimp->put("lists/".MAILCHIMP_LIST_ID."/members/$subscriber_hash", [
-               'email_address' => $userDetails->data->user_email,
-               'merge_fields' => $mailchimp_merge_fields,
-               'status' => $user_status,
-               'timestamp_opt' => $user->data->user_registered
-            ]);
+            // $subscriber_hash = $this->MailChimp->subscriberHash( $userDetails->data->user_email );
+            //
+            // // Use PUT to insert or update a record
+            // $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
+            //    'email_address' => $userDetails->data->user_email,
+            //    'merge_fields' => $mailchimp_merge_fields,
+            //    'status' => $user_status,
+            //    'timestamp_opt' => $user->data->user_registered
+            // ]);
 
         }
-
 
     }
 
