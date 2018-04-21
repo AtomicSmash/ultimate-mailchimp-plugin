@@ -39,6 +39,7 @@ class UltimateMailChimpPlugin {
 
             WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
             WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
+            WP_CLI::add_command( 'ultimate-mailchimp webhook-url', array( $this, 'generate_webhook_url' ) );
 
         };
 
@@ -209,9 +210,21 @@ class UltimateMailChimpPlugin {
         }
     }
 
+
+
+
     public function webhook() {
 
-        return "Hello";
+        return "You posted to the webhook!";
+
+    }
+
+    public function generate_webhook_url() {
+
+        $webhook_url_key = get_option( 'webhook_url_key' );
+
+        // if wehoook...
+
 
     }
 
