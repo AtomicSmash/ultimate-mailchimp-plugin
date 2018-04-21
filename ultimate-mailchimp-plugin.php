@@ -42,6 +42,15 @@ class UltimateMailChimpPlugin {
 
         };
 
+        // $this->register_webhook();
+
+        add_action( 'rest_api_init', function () {
+            register_rest_route( 'ultimate-mailchimp/v1', '/webhook', array(
+                'methods' => 'POST',
+                'callback' => array( $this, 'webhook' )
+            ));
+        });
+
     }
 
     function sync_users( $args, $assoc_args ){
@@ -198,7 +207,11 @@ class UltimateMailChimpPlugin {
 
             }
         }
+    }
 
+    public function webhook() {
+
+        return "Hello";
 
     }
 
