@@ -44,8 +44,15 @@ class UltimateMailChimpPlugin {
 
         };
 
-        // $this->register_webhook();
+        // Add custom fields to user profiles
+        add_action( 'show_user_profile', array( $this, 'add_user_custom_fields' ) );
+        add_action( 'edit_user_profile', array( $this, 'add_user_custom_fields' ) );
 
+        // Save new user custom fields
+        add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
+        add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
+
+        // Setup webhook REST API ednpoint
         add_action( 'rest_api_init', function () {
             register_rest_route( 'ultimate-mailchimp/v1', '/webhook', array(
                 'methods' => 'POST',
@@ -55,28 +62,60 @@ class UltimateMailChimpPlugin {
 
     }
 
-    function sync_users( $args, $assoc_args ){
+    public function add_user_custom_fields( $user ){
+
+        ?>
+        <h3><?php _e("Mailchimp syncing", "blank"); ?></h3>
+
+        <table class="form-table">
+            <tr>
+                <th><label for="address"><?php _e("Address"); ?></label></th>
+                <td>
+                    <input type="text" name="address" id="address" value="<?php echo esc_attr( get_the_author_meta( 'address', $user->ID ) ); ?>" class="regular-text" /><br />
+                    <span class="description"><?php _e("Please enter your address."); ?></span>
+                </td>
+            </tr>
+        </table>
+        <?php
+
+    }
+
+
+    public function save_user_custom_fields( $user_id ) {
+
+        if ( !current_user_can( 'edit_user', $user_id ) ) {
+            return false;
+        }
+
+        // update_user_meta( $user_id, 'address', $_POST['address'] );
+        // update_user_meta( $user_id, 'city', $_POST['city'] );
+        // update_user_meta( $user_id, 'postalcode', $_POST['postalcode'] );
+
+    }
+
+
+    public function sync_users( $args, $assoc_args ){
 
         $args = array(
 
         	// 'role'         => '',
         	// 'role__in'     => array(),
         	// 'role__not_in' => array(),
-        	'meta_key'     => '',
-        	'meta_value'   => '',
-        	'meta_compare' => '',
-        	'meta_query'   => array(),
-        	'date_query'   => array(),
-        	'include'      => array(),
-        	'exclude'      => array(),
-        	'orderby'      => 'login',
-        	'order'        => 'ASC',
-        	'offset'       => '',
-        	'search'       => '',
+        	// 'meta_key'     => '',
+        	// 'meta_value'   => '',
+        	// 'meta_compare' => '',
+        	// 'meta_query'   => array(),
+        	// 'date_query'   => array(),
+        	// 'include'      => array(),
+        	// 'exclude'      => array(),
+        	// 'orderby'      => 'login',
+        	// 'order'        => 'ASC',
+        	// 'offset'       => '',
+        	// 'search'       => '',
         	'number'       => -1,
-        	'count_total'  => false,
-        	'fields'       => 'all',
-        	'who'          => '',
+        	// 'count_total'  => false,
+        	// 'fields'       => 'all',
+        	// 'who'          => '',
         );
 
         $users = get_users( $args );
@@ -191,6 +230,7 @@ class UltimateMailChimpPlugin {
         if( count( $result['batches'] ) > 0 ){
             foreach( $result['batches'] as $batch ){
 
+                //ASTODO convert to proper cli line output
                 echo $batch['id'] . " | ";
                 echo $batch['status'] . " | ";
                 echo $this->time_ago( $batch['submitted_at'] );
@@ -244,6 +284,7 @@ class UltimateMailChimpPlugin {
 
     }
 
+    // ASTODO migrate this to human_time_diff https://codex.wordpress.org/Function_Reference/human_time_diff
     private function time_ago( $datetime, $full = false ){
 
         $now = new DateTime;
