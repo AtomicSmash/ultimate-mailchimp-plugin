@@ -146,6 +146,12 @@ class UltimateMailChimpPlugin {
 
     }
 
+    private function should_user_be_synced( $user_email = "" ){
+
+        // Work on a conditional here to per user checking
+
+    }
+
     private function send_batch_to_mailchimp( $users = array() ){
 
         $this->connect_to_mailchimp();
