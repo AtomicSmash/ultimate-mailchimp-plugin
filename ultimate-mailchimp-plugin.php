@@ -59,43 +59,54 @@ class UltimateMailChimpPlugin {
     }
 
     /**
-     * A summary informing the user what the associated element does.
+     * Add the new MailChimp options to the user edit form
      *
-     * A *description*, that can span multiple lines, to go _in-depth_ into the details of this element
-     * and to provide some background information or textual references.
+     * @param object $user_id current user object available from the edit page
      *
-     * @param object WordPress user object
-     *
-     * @return void
+     * @return void nothing returned, just echoed HTML
      */
     public function add_user_custom_fields( $user )
     {
         ?>
         <h3><?php _e("Mailchimp syncing", "blank"); ?></h3>
-
         <table class="form-table">
             <tr>
-                <th><label for="address"><?php _e("Address"); ?></label></th>
-                <td>
-                    <input type="text" name="address" id="address" value="<?php echo esc_attr( get_the_author_meta( 'address', $user->ID ) ); ?>" class="regular-text" /><br />
-                    <span class="description"><?php _e("Please enter your address."); ?></span>
+                <th><label for="address"><?php _e("Newsletter confirmation"); ?></label></th>
+                <td><fieldset>
+                    <label for="ultimate_mc_signup">
+                        <input type="checkbox" name="ultimate_mc_signup" id="ultimate_mc_signup" <?php
+                            if( get_the_author_meta( 'ultimate_mc_signup', $user->ID ) == true ){ echo "checked "; }
+                        ?>>
+                        <?php _e("If checked, the user has confirmed they would like to be added to your MailChimp list."); ?>
+                    </label>
+                    </fieldset>
                 </td>
             </tr>
         </table>
         <?php
+
+        //ASTODO add a user sync button here
     }
 
+
+    /**
+     * Save the 'Newsletter confirmation' meta field against the user
+     *
+     * @param object $user_id current user object available from the edit page
+     *
+     * @return void
+     */
     public function save_user_custom_fields( $user_id )
     {
 
         if ( !current_user_can( 'edit_user', $user_id ) ) {
             return false;
         }
-        //ASTODO hook up the custom field saving
-        // update_user_meta( $user_id, 'address', $_POST['address'] );
 
+        update_user_meta( $user_id, 'ultimate_mc_signup', $_POST['ultimate_mc_signup'] );
 
     }
+
 
     public function sync_users( $args, $assoc_args ){
 
