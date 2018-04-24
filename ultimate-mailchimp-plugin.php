@@ -27,8 +27,6 @@ require __DIR__ . '/vendor/autoload.php';
 // // create a log channel
 
 
-
-
 class UltimateMailChimpPlugin {
 
     function __construct()
@@ -38,7 +36,7 @@ class UltimateMailChimpPlugin {
 
             WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
             WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
-            WP_CLI::add_command( 'ultimate-mailchimp webhook-url', array( $this, 'generate_webhook_url' ) );
+            WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
 
         };
 
@@ -93,10 +91,9 @@ class UltimateMailChimpPlugin {
         if ( !current_user_can( 'edit_user', $user_id ) ) {
             return false;
         }
-
+        //ASTODO hook up the custom field saving
         // update_user_meta( $user_id, 'address', $_POST['address'] );
-        // update_user_meta( $user_id, 'city', $_POST['city'] );
-        // update_user_meta( $user_id, 'postalcode', $_POST['postalcode'] );
+
 
     }
 
@@ -123,6 +120,8 @@ class UltimateMailChimpPlugin {
         	// 'fields'       => 'all',
         	// 'who'          => '',
         );
+
+        //ASTODO add a filter to change the user args
 
         $users = get_users( $args );
 
@@ -154,7 +153,7 @@ class UltimateMailChimpPlugin {
 
     private function should_user_be_synced( $user_email = "" ){
 
-        // Work on a conditional here to per user checking
+        //ASTODO Work on a conditional here to per user checking
 
     }
 
@@ -166,22 +165,28 @@ class UltimateMailChimpPlugin {
 
         foreach( $users as $key => $user ){
 
-            $batch_process->post( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members", [
+            // Generate an MD5 of the users email address
+            $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
+
+            // Use PUT to insert or update a record, put requires a hashed email address and
+            // a 'status_if_new' property for members who are new to the list
+            $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , [
                 'email_address' => $user->data->user_email,
-                'status' => 'pending', // subscribed - unsubscribed - cleaned - pending
-            ]);
+                'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
+                'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
+                'merge_fields' => ['FNAME'=>'Dasvy', 'LNAME'=>'Jones']
+            ] );
 
         }
+
 
         $result = $batch_process->execute();
 
         echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
 
-
-
-        // $result = $batch_process->check_status();
+        // sleep(10);
         //
-        // echo "--------------------------------------------";
+        // $result = $batch_process->check_status();
         //
         // echo "<pre>";
         // print_r($result);
@@ -236,7 +241,13 @@ class UltimateMailChimpPlugin {
 
         $this->connect_to_mailchimp();
 
-        $result = $this->MailChimp->get( "batches" );
+        $result = $this->MailChimp->get( "batches?count=100" );
+
+
+        // Sort batch results by internal timestamp
+        usort( $result['batches'], function($a, $b){
+            return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
+        });
 
         //ASTODO need to order this output by date order
         if( count( $result['batches'] ) > 0 ){
@@ -269,6 +280,7 @@ class UltimateMailChimpPlugin {
     public function webhook() {
 
         //ASTODO need to check if there is a key set
+        //ASTODO need to complete the webhook functionality
         return "You posted to the webhook!";
 
     }
