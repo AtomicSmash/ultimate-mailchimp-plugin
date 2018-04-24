@@ -25,16 +25,14 @@ require __DIR__ . '/vendor/autoload.php';
 // use Monolog\Handler\StreamHandler;
 //
 // // create a log channel
-// $log = new Logger('name');
-// $log->pushHandler(new StreamHandler('path/to/your.log', Logger::WARNING));
-//
-// // add records to the log
-// $log->warning('Foo');
-// $log->error('Bar');
+
+
+
 
 class UltimateMailChimpPlugin {
 
-    function __construct() {
+    function __construct()
+    {
 
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
@@ -62,8 +60,18 @@ class UltimateMailChimpPlugin {
 
     }
 
-    public function add_user_custom_fields( $user ){
-
+    /**
+     * A summary informing the user what the associated element does.
+     *
+     * A *description*, that can span multiple lines, to go _in-depth_ into the details of this element
+     * and to provide some background information or textual references.
+     *
+     * @param object WordPress user object
+     *
+     * @return void
+     */
+    public function add_user_custom_fields( $user )
+    {
         ?>
         <h3><?php _e("Mailchimp syncing", "blank"); ?></h3>
 
@@ -77,11 +85,10 @@ class UltimateMailChimpPlugin {
             </tr>
         </table>
         <?php
-
     }
 
-
-    public function save_user_custom_fields( $user_id ) {
+    public function save_user_custom_fields( $user_id )
+    {
 
         if ( !current_user_can( 'edit_user', $user_id ) ) {
             return false;
@@ -92,7 +99,6 @@ class UltimateMailChimpPlugin {
         // update_user_meta( $user_id, 'postalcode', $_POST['postalcode'] );
 
     }
-
 
     public function sync_users( $args, $assoc_args ){
 
@@ -284,7 +290,7 @@ class UltimateMailChimpPlugin {
 
     }
 
-    // ASTODO migrate this to human_time_diff https://codex.wordpress.org/Function_Reference/human_time_diff
+    //ASTODO migrate this to human_time_diff https://codex.wordpress.org/Function_Reference/human_time_diff
     private function time_ago( $datetime, $full = false ){
 
         $now = new DateTime;
