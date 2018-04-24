@@ -3,7 +3,7 @@
   "description": "Ultimate Mailchimp Plugin",
   "keywords": ["wordpress", "plugin", "dev", "MailChimp"],
   "homepage": "http://www.atomicsmash.co.uk/",
-  "license": "",
+  "license": "MIT",
   "authors": [
     {
         "name": "David Darke",
