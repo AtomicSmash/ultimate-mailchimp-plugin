@@ -14,10 +14,11 @@
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
+
 use \DrewM\MailChimp\MailChimp;
 use \DrewM\MailChimp\Batch;
 
-
+//ASTODO there needs to be a check to make sure this fiel exists
 require __DIR__ . '/vendor/autoload.php';
 
 //ASTODO Need to add logging!
@@ -26,14 +27,16 @@ require __DIR__ . '/vendor/autoload.php';
 //
 // // create a log channel
 
+//ASTODO There needs to be a plugin version number saved to the database when activated, this will be useful for future plugin updates
 
 class UltimateMailChimpPlugin {
 
-    function __construct()
-    {
+    function __construct() {
 
+        // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
+            //ASTODO this needs to be wrapped in the
             WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
             WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
             WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
@@ -47,6 +50,12 @@ class UltimateMailChimpPlugin {
         // Save new user custom fields
         add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
         add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
+
+        //ASTODO there needs to be a check to make sure WooCommerce is available
+        // Add mailchimp newsletter to checkout
+        add_action( 'woocommerce_after_order_notes', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
+        add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'save_woocommerce_checkout_custom_fields' ) );
+
 
         // Setup webhook REST API ednpoint
         add_action( 'rest_api_init', function () {
@@ -65,8 +74,7 @@ class UltimateMailChimpPlugin {
      *
      * @return void nothing returned, just echoed HTML
      */
-    public function add_user_custom_fields( $user )
-    {
+    public function add_user_custom_fields( $user ) {
         ?>
         <h3><?php _e("Mailchimp syncing", "blank"); ?></h3>
         <table class="form-table">
@@ -96,19 +104,22 @@ class UltimateMailChimpPlugin {
      *
      * @return void
      */
-    public function save_user_custom_fields( $user_id )
-    {
+    public function save_user_custom_fields( $user_id ) {
 
         if ( !current_user_can( 'edit_user', $user_id ) ) {
             return false;
         }
 
-        update_user_meta( $user_id, 'ultimate_mc_signup', $_POST['ultimate_mc_signup'] );
+        if( $_POST['ultimate_mc_signup'] == 'on' ){
+            update_user_meta( $user_id, 'ultimate_mc_signup', true );
+        }else{
+            update_user_meta( $user_id, 'ultimate_mc_signup', false );
+        }
 
     }
 
 
-    public function sync_users( $args, $assoc_args ){
+    public function sync_users( $args, $assoc_args ) {
 
         $args = array(
 
@@ -319,6 +330,50 @@ class UltimateMailChimpPlugin {
 
     }
 
+    /**
+     *
+     * WooCommerce integration
+     *
+     */
+
+
+    public function add_woocommerce_checkout_custom_fields( $checkout ) {
+
+        //ASTODO add filter to update the title
+        //ASTODO add logic to detect if the user is current signed up to the newsletter
+        echo '<div id="ultimate_mc_wc_signup"><h2>' . __('Newsletter Signup') . '</h2>';
+
+            //ASTODO add filter to update the label
+            woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
+                'type'          => 'checkbox',
+                'class'         => array( 'input-checkbox' ),
+                'label'         => __( 'Sign me up to the newsletter' ),
+                'required'  => false,
+            ), 0);
+
+        echo '</div>';
+
+    }
+
+
+    function save_woocommerce_checkout_custom_fields( $order_id ) {
+
+        //ASTODO think about guest checkout
+
+        $user = wp_get_current_user();
+        $user_id = $user->ID;
+
+        if ( $user_id != 0 ) {
+            if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
+                update_user_meta( $user_id, 'ultimate_mc_signup', true );
+            }else{
+                update_user_meta( $user_id, 'ultimate_mc_signup', false );
+            }
+        };
+
+    }
+
+
     //ASTODO migrate this to human_time_diff https://codex.wordpress.org/Function_Reference/human_time_diff
     private function time_ago( $datetime, $full = false ){
 
@@ -350,7 +405,6 @@ class UltimateMailChimpPlugin {
         return $string ? implode(', ', $string) . ' ago' : 'just now';
 
     }
-
 
 }
 
