@@ -35,13 +35,14 @@ class UltimateMailChimpPlugin {
 
         // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
-
-            //ASTODO this needs to be wrapped in the
-            WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
-            WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
-            WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
-
-        };
+            if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
+                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
+            }else{
+                WP_CLI::add_command( 'ultimate-mailchimp setup', array( $this, 'setup' ) );
+            }
+        }
 
         // Add custom fields to user profiles
         add_action( 'show_user_profile', array( $this, 'add_user_custom_fields' ) );
@@ -68,11 +69,22 @@ class UltimateMailChimpPlugin {
     }
 
     /**
-     * Add the new MailChimp options to the user edit form
+     * Show a warning message for the fact the constants are not setup.
      *
-     * @param object $user_id current user object available from the edit page
+     * @return void
+     */
+    public function setup() {
+
+        WP_CLI::line( "Config constants missing 🙁. Visit https://github.com/AtomicSmash/ultimate-mailchimp-plugin for a setup guide" );
+
+    }
+
+    /**
+     * Add the new MailChimp options to the user edit form.
      *
-     * @return void nothing returned, just echoed HTML
+     * @param object $user_id current user object available from the edit page.
+     *
+     * @return void nothing returned, just echoed HTML.
      */
     public function add_user_custom_fields( $user ) {
         ?>
