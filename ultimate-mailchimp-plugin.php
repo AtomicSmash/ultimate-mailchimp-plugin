@@ -282,7 +282,7 @@ class UltimateMailChimpPlugin {
             return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
         });
 
-        //ASTODO need to order this output by date order
+
         if( count( $result['batches'] ) > 0 ){
             foreach( $result['batches'] as $batch ){
 
@@ -350,15 +350,18 @@ class UltimateMailChimpPlugin {
 
     public function add_woocommerce_checkout_custom_fields( $checkout ) {
 
-        //ASTODO add filter to update the title
         //ASTODO add logic to detect if the user is current signed up to the newsletter
-        echo '<div id="ultimate_mc_wc_signup"><h2>' . __('Newsletter Signup') . '</h2>';
 
-            //ASTODO add filter to update the label
+        // apply filters for modifying the signup box
+        $newsletter_title = apply_filters( 'ul_mc_checkout_title', 'Newsletter Signup' );
+        $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Sign me up to the newsletter' );
+
+        echo '<div id="ultimate_mc_wc_signup"><h2>' . __( $newsletter_title ) . '</h2>';
+
             woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
                 'type'          => 'checkbox',
                 'class'         => array( 'input-checkbox' ),
-                'label'         => __( 'Sign me up to the newsletter' ),
+                'label'         => __( $checkbox_label ),
                 'required'  => false,
             ), 0);
 
