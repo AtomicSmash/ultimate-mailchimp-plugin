@@ -14,7 +14,6 @@
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
-
 use \DrewM\MailChimp\MailChimp;
 use \DrewM\MailChimp\Batch;
 
@@ -164,11 +163,11 @@ class UltimateMailChimpPlugin {
     }
 
     private function connect_to_mailchimp(){
-
-        //ASTODO Add check to make sure constant is set ULTIMATE_MAILCHIMP_API_KEY
-        //ASTODO Make sure user list constant exists ULTIMATE_MAILCHIMP_LIST_ID
-        $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
-
+        if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
+            $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
+        }else{
+            WP_CLI::error( "Constants are not defined" );
+        }
     }
 
     private function is_user_on_mailchimp_list( $user_email = "" ){
