@@ -281,45 +281,46 @@ class UltimateMailChimpPlugin {
     }
 
 
-    public function get_batches( $users = array() ){
+    public function get_batches( $cli_args = array() ){
 
         $this->connect_to_mailchimp();
 
-        $result = $this->MailChimp->get( "batches?count=100" );
+        if( ! isset( $cli_args[0] ) ) {
+
+            // ASTODO reduce number of batches displayed, maybe just show the last ten
+            $result = $this->MailChimp->get( "batches?count=100" );
 
 
-        // Sort batch results by internal timestamp
-        usort( $result['batches'], function($a, $b){
-            return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
-        });
+            // Sort batch results by internal timestamp
+            usort( $result['batches'], function($a, $b){
+                return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
+            });
 
-
-        if( count( $result['batches'] ) > 0 ){
-            foreach( $result['batches'] as $batch ){
-
-                //ASTODO convert to proper cli line output
-                echo $batch['id'] . " | ";
-                echo $batch['status'] . " | ";
-                echo $this->time_ago( $batch['submitted_at'] );
-
-
-                echo "\n";
-
-                // [id] => 02457dc1c8
-                // [status] => finished
-                // [total_operations] => 1
-                // [finished_operations] => 1
-                // [errored_operations] => 1
-                // [submitted_at] => 2018-04-19T19:33:01+00:00
-                // [completed_at] => 20
-                // [response_body_url] =>
-
+            // Loop through all the returned batches and display details
+            if( count( $result['batches'] ) > 0 ){
+                foreach( $result['batches'] as $batch ){
+                    WP_CLI::line( $batch['id'] . " | " . $batch['status'] . " | " . $this->time_ago( $batch['submitted_at'] ) );
+                }
             }
+
+        }else{
+
+            if( strlen( $cli_args[0] ) != 10 ) {
+                WP_CLI::error( "Supplied batch ref doesn't look right 🤔" );
+            }
+
+            $result = $this->MailChimp->get( "batches/" . $cli_args[0] );
+
+            WP_CLI::line( "Status: " . $result[ 'status' ] );
+            WP_CLI::line( "Total operations: " . $result[ 'total_operations' ] );
+            WP_CLI::line( "Finished operations: " . $result[ 'finished_operations' ] );
+            WP_CLI::line( "Errored operations: " . $result[ 'errored_operations' ] );
+            WP_CLI::line( "Submitted at: " . $result[ 'submitted_at' ] );
+            WP_CLI::line( "Response download: " . $result[ 'response_body_url' ] );
+
         }
+
     }
-
-
-
 
     public function webhook() {
 
