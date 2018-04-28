@@ -3,14 +3,40 @@
 
 ## Features
 
-- Bulk sync
+- Bulk sync users form WordPress to MailChimp
 
 
-### Available filters
+## Merge fields
+
+## Available filters
 
 WooCommerce checkout
-`ul_mc_checkout_title` - Modify the title in WooCommerce signup box
-`ul_mc_checkout_checkbox_label` - Modify the checkbox label in WooCommerce signup box
+
+`ul_mc_custom_merge_fields` - Modify the merge fields sent to MailChimp.
+
+`ul_mc_checkout_title` - Modify the title in WooCommerce signup box.
+
+`ul_mc_checkout_checkbox_label` - Modify the checkbox label in WooCommerce signup box.
+
+
+## Example use of filters
+
+
+```
+function my_custom_merge_fields( $merge_fields ) {
+
+	// You use the field name
+	// $merge_fields['CUSTOM'] = 'Custom data processing here';
+
+	// Or use the field key
+	$merge_fields['MERGE5'] = 'Custom data processing here';
+
+    return $merge_fields;
+
+}
+add_filter( 'ul_mc_custom_merge_fields', 'my_custom_merge_fields' );
+
+```
 
 ```
 function my_custom_title( $example ) {
