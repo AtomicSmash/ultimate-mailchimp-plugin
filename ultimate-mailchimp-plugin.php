@@ -14,17 +14,13 @@
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
-use \DrewM\MailChimp\MailChimp;
-use \DrewM\MailChimp\Batch;
-
-//ASTODO there needs to be a check to make sure this fiel exists
+//ASTODO there needs to be a check to make sure this file exists
 require __DIR__ . '/vendor/autoload.php';
 
-//ASTODO Need to add logging!
-// use Monolog\Logger;
-// use Monolog\Handler\StreamHandler;
-//
-// // create a log channel
+use \DrewM\MailChimp\MailChimp;
+use \DrewM\MailChimp\Batch;
+use \Monolog\Logger;
+use \Monolog\Handler\StreamHandler;
 
 //ASTODO There needs to be a plugin version number saved to the database when activated, this will be useful for future plugin updates
 
@@ -51,8 +47,13 @@ class UltimateMailChimpPlugin {
         add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
         add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
 
+        //
+        add_action( 'user_register', 'new_user_created', 10, 1 );
+
+
         //ASTODO there needs to be a check to make sure WooCommerce is available
         // Add mailchimp newsletter to checkout
+        //ASTODO need to made sure this newletter form is movable
         add_action( 'woocommerce_after_order_notes', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
         add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'save_woocommerce_checkout_user_fields' ) );
 
@@ -77,6 +78,29 @@ class UltimateMailChimpPlugin {
         WP_CLI::line( "Config constants missing 🙁. Visit https://github.com/AtomicSmash/ultimate-mailchimp-plugin for a setup guide" );
 
     }
+
+
+    public function new_user_created( $user_id ) {
+
+
+        $uploads_directory = wp_upload_dir();
+
+        // Create the logger
+        $logger = new Logger('my_logger');
+        // Now add some handlers
+        // ASTODO hash the filename by date
+        $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp/my_app.log', Logger::DEBUG));
+
+
+        // You can now use your logger
+        $logger->info('New user registered');
+
+
+        // if ( isset( $_POST['first_name'] ) )
+        //     update_user_meta($user_id, 'first_name', $_POST['first_name']);
+
+    }
+
 
     /**
      * Add the new MailChimp options to the user edit form.
