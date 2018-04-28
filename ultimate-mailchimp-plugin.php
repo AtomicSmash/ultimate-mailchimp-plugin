@@ -36,7 +36,7 @@ class UltimateMailChimpPlugin {
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
                 WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
-                WP_CLI::add_command( 'ultimate-mailchimp get-batches', array( $this, 'get_batches' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
                 WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
             }else{
                 WP_CLI::add_command( 'ultimate-mailchimp setup', array( $this, 'setup' ) );
@@ -54,7 +54,7 @@ class UltimateMailChimpPlugin {
         //ASTODO there needs to be a check to make sure WooCommerce is available
         // Add mailchimp newsletter to checkout
         add_action( 'woocommerce_after_order_notes', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
-        add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'save_woocommerce_checkout_custom_fields' ) );
+        add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'save_woocommerce_checkout_user_fields' ) );
 
 
         // Setup webhook REST API ednpoint
@@ -201,13 +201,24 @@ class UltimateMailChimpPlugin {
             // Generate an MD5 of the users email address
             $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
 
+            $first_name = get_user_meta( $user->ID, 'first_name', true );
+            $last_name = get_user_meta( $user->ID, 'last_name', true );
+
+            $merge_fields = array(
+                'FNAME' => $first_name,
+                'LNAME' => $last_name
+            );
+
+            $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user );
+
+
             // Use PUT to insert or update a record, put requires a hashed email address and
             // a 'status_if_new' property for members who are new to the list
             $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , [
                 'email_address' => $user->data->user_email,
                 'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
                 'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
-                'merge_fields' => ['FNAME'=>'Dasvy', 'LNAME'=>'Jones']
+                'merge_fields' => $merge_fields
             ] );
 
         }
@@ -352,7 +363,7 @@ class UltimateMailChimpPlugin {
 
         //ASTODO add logic to detect if the user is current signed up to the newsletter
 
-        // apply filters for modifying the signup box
+        // Apply filters for modifying the signup box
         $newsletter_title = apply_filters( 'ul_mc_checkout_title', 'Newsletter Signup' );
         $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Sign me up to the newsletter' );
 
@@ -370,9 +381,9 @@ class UltimateMailChimpPlugin {
     }
 
 
-    function save_woocommerce_checkout_custom_fields( $order_id ) {
+    function save_woocommerce_checkout_user_fields( $order_id ) {
 
-        //ASTODO think about guest checkout
+        //ASTODO think about guest checkout :/
 
         $user = wp_get_current_user();
         $user_id = $user->ID;
