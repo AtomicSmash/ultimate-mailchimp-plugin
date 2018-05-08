@@ -14,8 +14,11 @@
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
-//ASTODO there needs to be a check to make sure this file exists
-require __DIR__ . '/vendor/autoload.php';
+
+// If autoload exists... autoload it baby...
+if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+    require __DIR__ . '/vendor/autoload.php';
+}
 
 use \DrewM\MailChimp\MailChimp;
 use \DrewM\MailChimp\Batch;
@@ -47,8 +50,17 @@ class UltimateMailChimpPlugin {
         add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
         add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
 
+        // run new_user_created after standard user registration and ___ after woo commerce version
+
+        // Run when a new user is created
+        add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
+
+
+
+
+        // add_action('woocommerce_order_status_completed', 'open_assessment_after_payment');
         //
-        add_action( 'user_register', 'new_user_created', 10, 1 );
+        // function open_assessment_after_payment($order_id) {
 
 
         //ASTODO there needs to be a check to make sure WooCommerce is available
@@ -82,22 +94,22 @@ class UltimateMailChimpPlugin {
 
     public function new_user_created( $user_id ) {
 
-
         $uploads_directory = wp_upload_dir();
 
         // Create the logger
-        $logger = new Logger('my_logger');
+        $logger = new Logger( 'ultimate_mailchimp' );
         // Now add some handlers
         // ASTODO hash the filename by date
-        $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp/my_app.log', Logger::DEBUG));
+        $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp/new-users.log', Logger::DEBUG));
 
 
-        // You can now use your logger
-        $logger->info('New user registered');
+        $logger->info( 'New user registered: ' . $user_id );
 
+        $logger->info( get_the_author_meta( 'ultimate_mc_signup', $user_id ) );
+        $logger->info( 'post_data', $_POST );
 
-        // if ( isset( $_POST['first_name'] ) )
-        //     update_user_meta($user_id, 'first_name', $_POST['first_name']);
+        // ultimate_mc_wc_checkbox
+
 
     }
 
