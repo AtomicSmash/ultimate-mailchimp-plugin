@@ -212,6 +212,22 @@ class UltimateMailChimpPlugin {
 
     }
 
+    private function get_merge_fields( $user ){
+
+        $first_name = get_user_meta( $user->ID, 'first_name', true );
+        $last_name = get_user_meta( $user->ID, 'last_name', true );
+
+        $merge_fields = array(
+            'FNAME' => $first_name,
+            'LNAME' => $last_name
+        );
+
+        $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user );
+
+        return $merge_fields;
+
+    }
+
     private function send_batch_to_mailchimp( $users = array() ){
 
         $this->connect_to_mailchimp();
@@ -223,16 +239,7 @@ class UltimateMailChimpPlugin {
             // Generate an MD5 of the users email address
             $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
 
-            $first_name = get_user_meta( $user->ID, 'first_name', true );
-            $last_name = get_user_meta( $user->ID, 'last_name', true );
-
-            $merge_fields = array(
-                'FNAME' => $first_name,
-                'LNAME' => $last_name
-            );
-
-            $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user );
-
+            $merge_fields = $this->get_merge_fields( $user );
 
             // Use PUT to insert or update a record, put requires a hashed email address and
             // a 'status_if_new' property for members who are new to the list
@@ -379,7 +386,9 @@ class UltimateMailChimpPlugin {
             // echo "</pre>";
             // die();
 
+            $merge_fields = $this->get_merge_fields( $user );
 
+            //ASTODO, subscribed by default?
             $user_status = 'subscribed';
 
             $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
@@ -387,20 +396,19 @@ class UltimateMailChimpPlugin {
             // Use PUT to insert or update a record
             $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
                'email_address' => $user->data->user_email,
-               // 'merge_fields' => $mailchimp_merge_fields,
+               'merge_fields' => $merge_fields,
                'status' => $user_status,
                'timestamp_opt' => $user->data->user_registered
             ]);
 
         // }
 
-
+        //ASTODO get this into a $this->log file
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
-            if( MailChimp->success() ) {
+            if( $this->MailChimp->success() ) {
                 $logger->info( 'Mailchimp ressponce', $result );
 
-            	print_r($result);
             } else {
                 $logger->info( 'Mailchimp ressponce', $MailChimp->getLastError() );
 
