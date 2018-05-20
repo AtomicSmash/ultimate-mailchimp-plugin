@@ -8,6 +8,14 @@
 
 ## Merge fields
 
+## When are user details automatically sent to MailChimp?
+
+The plugin hooks into these action to update MailChimp:
+
+- `user_register` : This is a global hook that is fired when a user is created inside WordPress. This means it's fired from the frontend registration form, backend user addition screen, any plugin or custom script used to register users and almost anything in between.
+
+- `woo`
+
 ## Available filters
 
 WooCommerce checkout
@@ -18,6 +26,7 @@ WooCommerce checkout
 
 `ul_mc_checkout_checkbox_label` - Modify the checkbox label in WooCommerce signup box.
 
+define ('ULTIMATE_MAILCHIMP_LOGGING', true);
 
 ## Example use of filters
 

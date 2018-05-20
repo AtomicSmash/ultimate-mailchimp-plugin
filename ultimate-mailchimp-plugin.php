@@ -94,22 +94,8 @@ class UltimateMailChimpPlugin {
 
     public function new_user_created( $user_id ) {
 
-        $uploads_directory = wp_upload_dir();
-
-        // Create the logger
-        $logger = new Logger( 'ultimate_mailchimp' );
-        // Now add some handlers
-        // ASTODO hash the filename by date
-        $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp/new-users.log', Logger::DEBUG));
-
-
-        $logger->info( 'New user registered: ' . $user_id );
-
-        $logger->info( get_the_author_meta( 'ultimate_mc_signup', $user_id ) );
-        $logger->info( 'post_data', $_POST );
-
-        // ultimate_mc_wc_checkbox
-
+        // Sync the new user
+        $this->update_single_user( $user_id );
 
     }
 
@@ -264,56 +250,6 @@ class UltimateMailChimpPlugin {
 
         echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
 
-        // sleep(10);
-        //
-        // $result = $batch_process->check_status();
-        //
-        // echo "<pre>";
-        // print_r($result);
-        // echo "</pre>";
-
-
-
-
-        //return true;
-
-
-        // if ( $user_on_list ) {
-
-            // User has meta key so they are updating their email
-            // $subscriber_hash = $this->MailChimp->subscriberHash( $previous_email );
-            //
-            // // Update the merge fields with the new email
-            // $mailchimp_merge_fields['EMAIL'] = $userDetails->data->user_email;
-            //
-            // // Update the existing user, using PATCH
-            // $result = $this->MailChimp->patch( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
-            //     'merge_fields' => $mailchimp_merge_fields,
-            //     'status' => $user_status
-            // ]);
-
-        // } else {
-
-            // $subscriber_hash = $this->MailChimp->subscriberHash( $userDetails->data->user_email );
-            //
-            // // Use PUT to insert or update a record
-            // $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
-            //    'email_address' => $userDetails->data->user_email,
-            //    'merge_fields' => $mailchimp_merge_fields,
-            //    'status' => $user_status,
-            //    'timestamp_opt' => $user->data->user_registered
-            // ]);
-
-        // }
-
-
-        // MailChimp->success()) {
-        // 	print_r($result);
-        // } else {
-        // 	echo $MailChimp->getLastError();
-        // }
-
-
     }
 
 
@@ -386,6 +322,90 @@ class UltimateMailChimpPlugin {
 
         //ASTODO get the webhook url into a global var
         WP_CLI::line( "Your NEW webhook url is: " . WP_CLI::colorize( "%G" . get_bloginfo('url') . "/wp-json/ultimate-mailchimp/v1/?key=" . $new_key . "%n" ));
+
+    }
+
+    private function update_single_user( $user_id = 0 ){
+
+
+        //ASTODO enable this check in more places
+        //ASTODO This should be in it's own method $this->log();
+        if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
+
+            $uploads_directory = wp_upload_dir();
+
+            // Create the logger
+            $logger = new Logger( 'ultimate_mailchimp' );
+            // Now add some handlers
+            // ASTODO hash the filename by date
+            $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp/new-users.log', Logger::DEBUG));
+
+
+            $logger->info( 'Updating user: ' . $user_id );
+
+            // $logger->info( get_the_author_meta( 'ultimate_mc_signup', $user_id ) );
+            // $logger->info( 'post_data', $_POST );
+
+        }
+
+
+        $this->connect_to_mailchimp();
+
+
+        // if ( $user_on_list ) {
+        //
+        //     User has meta key so they are updating their email
+        //     $subscriber_hash = $this->MailChimp->subscriberHash( $previous_email );
+        //
+        //     // Update the merge fields with the new email
+        //     $mailchimp_merge_fields['EMAIL'] = $userDetails->data->user_email;
+        //
+        //     // Update the existing user, using PATCH
+        //     $result = $this->MailChimp->patch( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
+        //         'merge_fields' => $mailchimp_merge_fields,
+        //         'status' => $user_status
+        //     ]);
+        //
+        // } else {
+
+            $user = get_userdata( $user_id );
+            // echo 'Username: ' . $user_info->user_login . "\n";
+            // echo 'User roles: ' . implode(', ', $user_info->roles) . "\n";
+            // echo 'User ID: ' . $user_info->ID . "\n";
+
+
+            // echo "<pre>";
+            // print_r($user_info);
+            // echo "</pre>";
+            // die();
+
+
+            $user_status = 'subscribed';
+
+            $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
+
+            // Use PUT to insert or update a record
+            $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
+               'email_address' => $user->data->user_email,
+               // 'merge_fields' => $mailchimp_merge_fields,
+               'status' => $user_status,
+               'timestamp_opt' => $user->data->user_registered
+            ]);
+
+        // }
+
+
+        if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
+
+            if( MailChimp->success() ) {
+                $logger->info( 'Mailchimp ressponce', $result );
+
+            	print_r($result);
+            } else {
+                $logger->info( 'Mailchimp ressponce', $MailChimp->getLastError() );
+
+            }
+        }
 
     }
 
