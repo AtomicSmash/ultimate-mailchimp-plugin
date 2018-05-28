@@ -65,8 +65,7 @@ class UltimateMailChimpPlugin {
 
         //ASTODO there needs to be a check to make sure WooCommerce is available
         // Add mailchimp newsletter to checkout
-        //ASTODO need to made sure this newletter form is movable
-        add_action( 'woocommerce_after_order_notes', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
+        add_action( 'woocommerce_checkout_after_terms_and_conditions', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
         add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'save_woocommerce_checkout_user_fields' ) );
 
 
@@ -401,11 +400,17 @@ class UltimateMailChimpPlugin {
 
         //ASTODO add logic to detect if the user is current signed up to the newsletter
 
-        // Apply filters for modifying the signup box
-        $newsletter_title = apply_filters( 'ul_mc_checkout_title', 'Newsletter Signup' );
-        $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Sign me up to the newsletter' );
+        $newsletter_title = apply_filters( 'ul_mc_checkout_title', 'Marketing Permissions' );
+
+        $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Sign me up to the MailChimp newsletter' );
+
+        $paragraph_one = apply_filters( 'ul_mc_checkout_paragraph_one', 'We use MailChimp as our marketing automation platform. By clicking below to submit this form, you acknowledge that the information you provide will be transferred to MailChimp for processing in accordance with their Privacy Policy and Terms. We will use the information you provide on this form to be in touch with you and to provide updates and marketing. Please let us know all the ways you would like to hear from us:' );
+
+        $paragraph_two = apply_filters( 'ul_mc_checkout_paragraph_two', 'You can change your mind at any time by clicking the unsubscribe link in the footer of any email you receive from us, or by contacting us at EMAIL. We will treat your information with respect. For more information about our privacy practices please visit our website. By clicking below, you agree that we may process your information in accordance with these terms.' );
 
         echo '<div id="ultimate_mc_wc_signup"><h2>' . __( $newsletter_title ) . '</h2>';
+
+            echo "<p>$paragraph_one</p>";
 
             woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
                 'type'          => 'checkbox',
@@ -413,6 +418,8 @@ class UltimateMailChimpPlugin {
                 'label'         => __( $checkbox_label ),
                 'required'  => false,
             ), 0);
+
+            echo "<p>$paragraph_two</p>";
 
         echo '</div>';
 

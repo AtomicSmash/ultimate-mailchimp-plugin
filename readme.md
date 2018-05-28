@@ -16,6 +16,11 @@ The plugin hooks into these action to update MailChimp:
 
 - `woo`
 
+## Options - php constants
+
+define ('ULTIMATE_MAILCHIMP_LOGGING', true);
+
+
 ## Available filters
 
 WooCommerce checkout
@@ -26,7 +31,9 @@ WooCommerce checkout
 
 `ul_mc_checkout_checkbox_label` - Modify the checkbox label in WooCommerce signup box.
 
-define ('ULTIMATE_MAILCHIMP_LOGGING', true);
+`ul_mc_checkout_paragraph_one` -
+
+`ul_mc_checkout_paragraph_two` -
 
 ## Example use of filters
 
