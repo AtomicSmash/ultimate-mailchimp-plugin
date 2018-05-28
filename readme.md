@@ -4,7 +4,7 @@
 ## Features
 
 - Bulk sync users form WordPress to MailChimp
-
+- GDPR notices built in
 
 ## Merge fields
 
@@ -29,7 +29,6 @@ WooCommerce checkout
 define ('ULTIMATE_MAILCHIMP_LOGGING', true);
 
 ## Example use of filters
-
 
 ```
 function my_custom_merge_fields( $merge_fields ) {
@@ -61,3 +60,8 @@ function my_custom_label( $example ) {
 add_filter( 'ul_mc_checkout_checkbox_label', 'my_custom_label' );
 
 ```
+
+## Upcoming features
+
+- Webhook working
+- Send transactional info with purchases
