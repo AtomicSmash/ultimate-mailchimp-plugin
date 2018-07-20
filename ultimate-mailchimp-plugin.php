@@ -43,12 +43,12 @@ class UltimateMailChimpPlugin {
         }
 
         // Add custom fields to user profiles
-        add_action( 'show_user_profile', array( $this, 'add_user_custom_fields' ) );
-        add_action( 'edit_user_profile', array( $this, 'add_user_custom_fields' ) );
+        // add_action( 'show_user_profile', array( $this, 'add_user_custom_fields' ) );
+        // add_action( 'edit_user_profile', array( $this, 'add_user_custom_fields' ) );
 
         // Save new user custom fields
-        add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
-        add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
+        // add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
+        // add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
 
         // run new_user_created after standard user registration and ___ after woo commerce version
 
@@ -70,12 +70,12 @@ class UltimateMailChimpPlugin {
 
 
         // Setup webhook REST API ednpoint
-        add_action( 'rest_api_init', function () {
-            register_rest_route( 'ultimate-mailchimp/v1', '/webhook', array(
-                'methods' => 'POST',
-                'callback' => array( $this, 'webhook' )
-            ));
-        });
+        // add_action( 'rest_api_init', function () {
+        //     register_rest_route( 'ultimate-mailchimp/v1', '/webhook', array(
+        //         'methods' => 'POST',
+        //         'callback' => array( $this, 'webhook' )
+        //     ));
+        // });
 
     }
 
@@ -271,18 +271,24 @@ class UltimateMailChimpPlugin {
             // ASTODO reduce number of batches displayed, maybe just show the last ten
             $result = $this->MailChimp->get( "batches?count=100" );
 
+            if( $result != null ){
+                // Sort batch results by internal timestamp
+                usort( $result['batches'], function($a, $b){
+                    return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
+                });
 
-            // Sort batch results by internal timestamp
-            usort( $result['batches'], function($a, $b){
-                return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
-            });
-
-            // Loop through all the returned batches and display details
-            if( count( $result['batches'] ) > 0 ){
-                foreach( $result['batches'] as $batch ){
-                    WP_CLI::line( $batch['id'] . " | " . $batch['status'] . " | " . $this->time_ago( $batch['submitted_at'] ) );
+                // Loop through all the returned batches and display details
+                if( count( $result['batches'] ) > 0 ){
+                    foreach( $result['batches'] as $batch ){
+                        WP_CLI::line( $batch['id'] . " | " . $batch['status'] . " | " . $this->time_ago( $batch['submitted_at'] ) );
+                    }
                 }
+            }else{
+
+                WP_CLI::line( "No batches found" );
+
             }
+
 
         }else{
 
@@ -443,13 +449,13 @@ class UltimateMailChimpPlugin {
         $user = wp_get_current_user();
         $user_id = $user->ID;
 
-        if ( $user_id != 0 ) {
-            if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
-                update_user_meta( $user_id, 'ultimate_mc_signup', true );
-            }else{
-                update_user_meta( $user_id, 'ultimate_mc_signup', false );
-            }
-        };
+        // if ( $user_id != 0 ) {
+        //     if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
+        //         update_user_meta( $user_id, 'ultimate_mc_signup', true );
+        //     }else{
+        //         update_user_meta( $user_id, 'ultimate_mc_signup', false );
+        //     }
+        // };
 
         $this->update_single_user( $user_id );
 
