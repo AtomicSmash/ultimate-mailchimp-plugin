@@ -42,19 +42,28 @@ The plugin hooks into these action to update MailChimp:
 
 ## Setup
 
-`ULTIMATE_MAILCHIMP_LIST_ID ` - The list id
+### Step 1 - Turn on WooCommerce terms and conditions
 
+Go to `your-site.com/wp-admin/admin.php?page=wc-settings&tab=checkout` and make sure a terms and conditions page is set
 
+### Step 2 - Add configs
+
+Add these config details to your `wp-config.php`
 
 ```
 define('ULTIMATE_MAILCHIMP_LIST_ID', '');
 define('ULTIMATE_MAILCHIMP_API_KEY', '');
 ```
 
+`ULTIMATE_MAILCHIMP_LIST_ID` can be found inside the MailChimp account by going to your list > Settings > List name and campaign.
 
-## Options - php constants
+`ULTIMATE_MAILCHIMP_API_KEY` your key can be found in your account.
 
-define ('ULTIMATE_MAILCHIMP_LOGGING', true);
+
+### Step 3 - 
+
+
+
 
 
 ## Available filters
