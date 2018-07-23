@@ -15,7 +15,7 @@
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
 
-// If autoload exists... autoload it baby...
+// If autoload exists... autoload it baby... (this is for plugin developemnt and sites not using composer to pull plugins)
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     require __DIR__ . '/vendor/autoload.php';
 }
@@ -38,7 +38,7 @@ class UltimateMailChimpPlugin {
                 WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
             }else{
-                WP_CLI::add_command( 'ultimate-mailchimp setup', array( $this, 'setup' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $this, 'setup' ) );
             }
         }
 
@@ -53,21 +53,25 @@ class UltimateMailChimpPlugin {
         // run new_user_created after standard user registration and ___ after woo commerce version
 
         // Run when a new user is created
-        add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
-
-
-
-
-        // add_action('woocommerce_order_status_completed', 'open_assessment_after_payment');
         //
-        // function open_assessment_after_payment($order_id) {
+        //
 
 
-        //ASTODO there needs to be a check to make sure WooCommerce is available
-        // Add mailchimp newsletter to checkout
-        add_action( 'woocommerce_checkout_after_terms_and_conditions', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
-        add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'save_woocommerce_checkout_user_fields' ) );
+        if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
 
+            add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
+
+            // add_action('woocommerce_order_status_completed', 'open_assessment_after_payment');
+            //
+            // function open_assessment_after_payment($order_id) {
+
+
+            //ASTODO there needs to be a check to make sure WooCommerce is available
+            // Add mailchimp newsletter to checkout
+            add_action( 'woocommerce_checkout_after_terms_and_conditions', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
+            add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'update_user_after_order' ), 10, 2 );
+
+        }
 
         // Setup webhook REST API ednpoint
         // add_action( 'rest_api_init', function () {
@@ -90,15 +94,12 @@ class UltimateMailChimpPlugin {
 
     }
 
-
     public function new_user_created( $user_id ) {
 
         // Sync the new user
         $this->update_single_user( $user_id );
 
     }
-
-
 
     /**
      * Add the new MailChimp options to the user edit form in the WordPress backend.
@@ -310,34 +311,33 @@ class UltimateMailChimpPlugin {
     }
 
 
-    private function update_single_user( $user_id = 0 ){
+    private function update_single_user( $user_id = 0, $user_status = 'subscribed' ){
 
-        $uploads_directory = wp_upload_dir();
+        //ASTODO This should be in it's own method $this->log();
+        if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
-        // Create the logger
-        $logger = new Logger( 'ultimate_mailchimp' );
-        // Now add some handlers
-        // ASTODO hash the filename by date
-        $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp/new-users.log', Logger::DEBUG));
+            // Create the logger
+            $logger = new Logger( 'ultimate_mailchimp' );
+            // ASTODO hash the filename by date
+            $uploads_directory = wp_upload_dir();
+            $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp.log', Logger::DEBUG));
+            $logger->info( '-------- Order placed --------' );
+            $logger->info( 'Updating user: ' . $user_id );
+
+        }
 
 
-        $logger->info( 'User syncing started: ' . get_user_meta( $user_id, 'ultimate_mc_signup', true ) );
-
-        if( get_user_meta( $user_id, 'ultimate_mc_signup', true ) == "1" ){
+        // if( get_user_meta( $user_id, 'ultimate_mc_signup', true ) == "1" ){
 
             //ASTODO enable this check in more places
-            //ASTODO This should be in it's own method $this->log();
-            if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
+            // if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
-
-
-
-                $logger->info( 'Updating user: ' . $user_id );
+                // $logger->info( 'Updating user: ' . $user_id );
 
                 // $logger->info( get_the_author_meta( 'ultimate_mc_signup', $user_id ) );
                 // $logger->info( 'post_data', $_POST );
 
-            }
+            // }
 
 
             $this->connect_to_mailchimp();
@@ -369,17 +369,17 @@ class UltimateMailChimpPlugin {
                 // print_r($user_info);
                 // echo "</pre>";
                 // die();
-
+                $email_address = "david+".$user->data->user_email;
                 $merge_fields = $this->get_merge_fields( $user );
 
                 //ASTODO, subscribed by default?
-                $user_status = 'subscribed';// subscribed - unsubscribed - cleaned - pending
 
-                $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
+
+                $subscriber_hash = $this->MailChimp->subscriberHash( $email_address );
 
                 // Use PUT to insert or update a record
                 $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
-                   'email_address' => $user->data->user_email,
+                   'email_address' => $email_address,
                    'merge_fields' => $merge_fields,
                    'status' => $user_status,
                    'timestamp_opt' => $user->data->user_registered
@@ -394,15 +394,22 @@ class UltimateMailChimpPlugin {
             //ASTODO get this into a $this->log file
             if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
+                $logger->info( 'Updating this Email address: ' . $email_address );
+                $logger->info( 'Updating to these Merge fields', $merge_fields );
+                $logger->info( 'Updating to this status: ' . $user_status );
+
                 if( $this->MailChimp->success() ) {
-                    // $logger->info( 'Mailchimp ressponce', $result );
-
+                    $logger->info( 'Mailchimp response - status: '. $result['status'] );
+                    $logger->info( 'Mailchimp response - merge fields', $result['merge_fields'] );
                 } else {
-                    // $logger->info( 'Mailchimp ressponce', $MailChimp->getLastError() );
-
+                    $logger->info( 'Mailchimp error: ' . $this->MailChimp->getLastError() );
                 }
             }
-        }
+        // }
+
+        if ( defined('ULTIMATE_MAILCHIMP_DEBUG') ) {
+            die( 'YOU ARE IN DEBUG MODE! Mailchimp has been updated' );
+        };
     }
 
     /**
@@ -442,12 +449,12 @@ class UltimateMailChimpPlugin {
     }
 
 
-    function save_woocommerce_checkout_user_fields( $order_id ) {
+    function update_user_after_order( $user_id, $data ) {
 
         //ASTODO think about guest checkout :/
 
-        $user = wp_get_current_user();
-        $user_id = $user->ID;
+        // $user = wp_get_current_user();
+        // $user_id = $user->ID;
 
         // if ( $user_id != 0 ) {
         //     if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
@@ -456,11 +463,45 @@ class UltimateMailChimpPlugin {
         //         update_user_meta( $user_id, 'ultimate_mc_signup', false );
         //     }
         // };
+        // <pre>Array
+        // (
+        //     [terms] => 1
+        //     [createaccount] => 0
+        //     [payment_method] => cheque
+        //     [shipping_method] =>
+        //     [ship_to_different_address] =>
+        //     [billing_first_name] => David
+        //     [billing_last_name] => Darke
+        //     [billing_company] => Atomic Smash
+        //     [billing_email] => david@atomicsmash.co.uk
+        //     [billing_phone] => 2321312
+        //     [billing_country] => GB
+        //     [billing_address_1] => Flat 4,
+        //     [billing_address_2] => 4 Saville Place,
+        //     [billing_city] => Bristol
+        //     [billing_state] => Avon
+        //     [billing_postcode] => BS8 4EJ
+        //     [order_comments] =>
+        // )
+        // </pre>
 
-        $this->update_single_user( $user_id );
+
+        if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
+
+            if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') ) {
+                $user_status = 'pending';
+            }else{
+                $user_status = 'subscribed';
+            }
+
+            $this->update_single_user( $user_id, $user_status ); // options: subscribed - unsubscribed - cleaned - pending
+        }else{
+            // $status = 'unsubscribed' // options: subscribed - unsubscribed - cleaned - pending
+        }
+
+
 
     }
-
 
     //ASTODO migrate this to human_time_diff https://codex.wordpress.org/Function_Reference/human_time_diff
     private function time_ago( $datetime, $full = false ){
