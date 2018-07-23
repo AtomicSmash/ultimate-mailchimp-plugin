@@ -61,9 +61,7 @@ define('ULTIMATE_MAILCHIMP_API_KEY', '');
 define('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN', true);
 ```
 
-`ULTIMATE_MAILCHIMP_LIST_ID` can be found inside the MailChimp account by going to your list > Settings > List name and campaign.
-
-![mailchimp_get_list_id](https://user-images.githubusercontent.com/1636310/43076416-18e63d42-8e7c-11e8-907d-03074ba6879a.gif)
+`ULTIMATE_MAILCHIMP_LIST_ID` can be found inside the MailChimp account by going to your list > Settings > List name and campaign. [See here](https://user-images.githubusercontent.com/1636310/43076416-18e63d42-8e7c-11e8-907d-03074ba6879a.gif)
 
 `ULTIMATE_MAILCHIMP_API_KEY` your key can be found in your account.
 
@@ -80,9 +78,7 @@ Here are some extra config options. We would recommend only using these in a dev
 
 ### Step 3 - Configure opt-in (encouraged)
 
-By default, when someone checks the "Sign me up to the MailChimp newsletter", the opt-in date is passed to MailChimp. If you would to configure the double opt-in process, go to your list > Settings > List name and campaign and check the "Enable double opt-in" checkbox and save.
-
-![mailchimp_double_opt_in](https://user-images.githubusercontent.com/1636310/43076417-1901cf3a-8e7c-11e8-8a8f-c5f0e63a0ff7.gif)
+By default, when someone checks the "Sign me up to the MailChimp newsletter", the opt-in date is passed to MailChimp. If you would to configure the double opt-in process, go to your list > Settings > List name and campaign and check the "Enable double opt-in" checkbox and save. [See here](https://user-images.githubusercontent.com/1636310/43076417-1901cf3a-8e7c-11e8-8a8f-c5f0e63a0ff7.gif)
 
 Users will then be emailed when they are added to the list to confirm their status.
 
@@ -133,6 +129,6 @@ add_filter( 'ul_mc_checkout_title', 'my_custom_title' );
 ## Upcoming features
 
 - Send transactional info with purchases
- - Sync products / store information
+  - Sync products / store information
 - Add shortcode and snippet for loading the signup form
 - Seperate dev (monolog) requirements inside composer file
