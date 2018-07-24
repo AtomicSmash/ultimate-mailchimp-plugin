@@ -310,7 +310,7 @@ class UltimateMailChimpPlugin {
         $order = wc_get_order( $order_id );
 
         // Get the custumer ID
-        $user_id = $order->get_user_id();
+        $user_id = get_current_user_id();
 
         $date = new DateTime();
 
@@ -342,10 +342,6 @@ class UltimateMailChimpPlugin {
 
         }
 
-
-
-
-
         $subscriber_hash = $this->MailChimp->subscriberHash( $billing_email );
 
 
@@ -357,8 +353,6 @@ class UltimateMailChimpPlugin {
            'timestamp_opt' => (string)$date->getTimestamp()
         ]);
 
-
-
         //ASTODO get this into a $this->log file
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
@@ -367,6 +361,7 @@ class UltimateMailChimpPlugin {
             $logger->info( 'Updating to this status: ' . $user_status );
 
             if( $this->MailChimp->success() ) {
+                $logger->info( 'Mailchimp sync SUCCESS' );
                 $logger->info( 'Mailchimp response - status: '. $result['status'] );
                 $logger->info( 'Mailchimp response - merge fields', $result['merge_fields'] );
             } else {
@@ -374,7 +369,7 @@ class UltimateMailChimpPlugin {
                 $logger->info( 'Mailchimp response: ' , $this->MailChimp->getLastResponse() );
             }
         }
-        // }
+
 
         if ( defined('ULTIMATE_MAILCHIMP_DEBUG') ) {
             die( 'YOU ARE IN DEBUG MODE! Mailchimp has been updated' );
@@ -463,10 +458,10 @@ class UltimateMailChimpPlugin {
 
         if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
 
-            if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') ) {
-                $user_status = 'pending';
-            }else{
+            if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
                 $user_status = 'subscribed';
+            }else{
+                $user_status = 'pending';
             }
 
             $this->update_single_user( $order_id, $user_status ); // options: subscribed - unsubscribed - cleaned - pending
