@@ -1,9 +1,6 @@
 # Ultimate MailChimp Plugin - v0.0.1
 ## WooCommerce MailChimp signups
-### This plugin may break your site 💀 or MailChimp account 💀💀💀.
-### Please only use in development environments.
-
-![woocommerce-signup](https://user-images.githubusercontent.com/1636310/42940662-3559c458-8b52-11e8-8c8a-c036d31d4cd1.png)
+### This plugin may break your site 💀 or MailChimp account 💀💀💀. Please only use in development environments.
 
 ### Plugin functionality
 
@@ -59,15 +56,13 @@ define('ULTIMATE_MAILCHIMP_API_KEY', '');
 
 `ULTIMATE_MAILCHIMP_API_KEY` - This is your key can be found in your account.
 
-`ULTIMATE_MAILCHIMP_DOUBLE_OPTIN` - Users will then be emailed when they are added to the list to confirm their status if this is set to true.
-
 ### Step 3 - Configure opt-in (encouraged)
 
 By default, when someone checks the "Sign me up to the MailChimp newsletter", the subscriber status is set to 'pending'. This will trigger a confirmation email from MailChimp.
 
 To make sure this functionality works. Go to your list > Settings > 'List name and campaign' and check the "Enable double opt-in" checkbox and save. [Like this](https://user-images.githubusercontent.com/1636310/43076417-1901cf3a-8e7c-11e8-8a8f-c5f0e63a0ff7.gif).
 
-If you would like to disable the double opt-in and force the user to be subscribed, add this constant to your config and set to `false`.
+If you would like to disable the double opt-in and force the user to be subscribed on sync, add this constant to your config and set to `false`.
 
 ```
 define('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN', false);
@@ -77,9 +72,14 @@ define('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN', false);
 
 Here are some extra config options. We would recommend only using these in a development or testing enviroment.
 
-`define('ULTIMATE_MAILCHIMP_LOGGING', true);` - This enables logging to the file: `wp-content/uploads/ultimate-mailchimp.log`
+```
+define('ULTIMATE_MAILCHIMP_LOGGING', true);
+define('ULTIMATE_MAILCHIMP_DEBUG', true);
+```
 
-`define('ULTIMATE_MAILCHIMP_DEBUG', true);` - When in debug mode, WooCommerce checkout will not complete (There will be a JSON error) yet MailChimp will be called. This allows you to run through the checkout process without having to create a new order each time.
+`ULTIMATE_MAILCHIMP_LOGGING` - This enables logging to the file: `wp-content/uploads/ultimate-mailchimp.log`
+
+`ULTIMATE_MAILCHIMP_DEBUG` - When in debug mode, WooCommerce checkout will not complete (There will be a JSON error) yet MailChimp will be called. This allows you to run through the checkout process without having to create a new order each time.
 
 
 ## Available filters
