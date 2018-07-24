@@ -34,11 +34,11 @@ class UltimateMailChimpPlugin {
         // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
-                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
-                WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
+                // WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
+                // WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
             }else{
-                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $this, 'setup' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $this, 'setup_warning' ) );
             }
         }
 
@@ -81,13 +81,6 @@ class UltimateMailChimpPlugin {
 
         }
 
-        // Setup webhook REST API ednpoint
-        // add_action( 'rest_api_init', function () {
-        //     register_rest_route( 'ultimate-mailchimp/v1', '/webhook', array(
-        //         'methods' => 'POST',
-        //         'callback' => array( $this, 'webhook' )
-        //     ));
-        // });
 
     }
 
@@ -96,7 +89,7 @@ class UltimateMailChimpPlugin {
      *
      * @return void
      */
-    public function setup() {
+    public function setup_warning() {
 
         WP_CLI::line( "Config constants missing 🙁. Visit https://github.com/AtomicSmash/ultimate-mailchimp-plugin for a setup guide" );
 
@@ -223,23 +216,38 @@ class UltimateMailChimpPlugin {
 
     // }
 
-    private function get_merge_fields( $user ){
+    private function get_merge_fields( $user_id ){
 
-        $first_name = get_user_meta( $user->ID, 'first_name', true );
-        $last_name = get_user_meta( $user->ID, 'last_name', true );
+        $merge_fields = array();
 
-        $merge_fields = array(
-            'FNAME' => $first_name,
-            'LNAME' => $last_name
-        );
+        if( isset( $_POST['billing_first_name'] ) ){
+            $merge_fields['FNAME'] = sanitize_text_field( $_POST['billing_first_name'] );
+        }else{
+            $merge_fields['FNAME'] = "";
+        }
 
-        $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user );
+        if( isset( $_POST['billing_last_name'] ) ){
+            $merge_fields['LNAME'] = sanitize_text_field( $_POST['billing_last_name'] );
+        }else{
+            $merge_fields['LNAME'] = "";
+        }
 
-        echo "<pre>";
-        print_r($merge_fields);
-        echo "</pre>";
-        die();
 
+        // See if there are
+        // if( count( $existing_merge_fields ) > 0 ){
+        //
+        // }else{
+            // $first_name = get_user_meta( $user_id, 'first_name', true );
+            // $last_name = get_user_meta( $user_id, 'last_name', true );
+            //
+            // $merge_fields = array(
+            //     'FNAME' => $first_name,
+            //     'LNAME' => $last_name
+            // );
+        // }
+
+
+        $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user_id );
 
         return $merge_fields;
 
@@ -327,142 +335,26 @@ class UltimateMailChimpPlugin {
 
     private function update_single_user( $order_id = 0, $user_status = 'subscribed' ){
 
-
         $order = wc_get_order( $order_id );
-
-        // Get the order ID
-        // $order_id = $order->get_id();
 
         // Get the custumer ID
         $user_id = $order->get_user_id();
 
-        echo "<pre>";
-        print_r($_POST);
-        echo "</pre>";
-        echo "<pre>";
-        print_r(get_class_methods($order));
-        echo "</pre>";
+        $date = new DateTime();
 
-        // [0] => get_formatted_order_total
-        // [1] => get_refunds
-        // [2] => get_total_refunded
-        // [3] => get_total_tax_refunded
-        // [4] => get_total_shipping_refunded
-        // [5] => get_item_count_refunded
-        // [6] => get_total_qty_refunded
-        // [7] => get_qty_refunded_for_item
-        // [8] => get_total_refunded_for_item
-        // [9] => get_tax_refunded_for_item
-        // [10] => get_total_tax_refunded_by_rate_id
-        // [11] => get_remaining_refund_amount
-        // [12] => get_remaining_refund_items
-        // [13] => __construct
-        // [14] => remove_order_items
-        // [15] => get_payment_tokens
-        // [16] => add_payment_token
-        // [17] => set_payment_method
-        // [18] => set_address
-        // [19] => get_address
-        // [20] => add_product
-        // [21] => update_product
-        // [22] => add_coupon
-        // [23] => update_coupon
-        // [24] => add_tax
-        // [25] => add_shipping
-        // [26] => update_shipping
-        // [27] => add_fee
-        // [28] => update_fee
-        // [29] => set_total
-        // [30] => get_items_tax_classes
-        // [31] => calculate_taxes
-        // [32] => calculate_shipping
-        // [33] => update_taxes
-        // [34] => calculate_totals
-        // [35] => get_order
-        // [36] => populate
-        // [37] => __isset
-        // [38] => __get
-        // [39] => get_status
-        // [40] => has_status
-        // [41] => get_user_id
-        // [42] => get_user
-        // [43] => get_transaction_id
-        // [44] => key_is_valid
-        // [45] => get_order_number
-        // [46] => get_formatted_billing_address
-        // [47] => get_formatted_shipping_address
-        // [48] => get_shipping_address_map_url
-        // [49] => get_billing_address
-        // [50] => get_shipping_address
-        // [51] => get_formatted_billing_full_name
-        // [52] => get_formatted_shipping_full_name
-        // [53] => get_items
-        // [54] => expand_item_meta
-        // [55] => get_item_count
-        // [56] => get_fees
-        // [57] => get_taxes
-        // [58] => get_shipping_methods
-        // [59] => has_shipping_method
-        // [60] => get_tax_totals
-        // [61] => has_meta
-        // [62] => get_item_meta_array
-        // [63] => display_item_meta
-        // [64] => get_item_meta
-        // [65] => get_total_discount
-        // [66] => get_cart_discount
-        // [67] => get_order_discount_to_display
-        // [68] => get_order_discount
-        // [69] => get_cart_tax
-        // [70] => get_shipping_tax
-        // [71] => get_total_tax
-        // [72] => get_total_shipping
-        // [73] => get_total
-        // [74] => get_subtotal
-        // [75] => get_item_subtotal
-        // [76] => get_line_subtotal
-        // [77] => get_item_total
-        // [78] => get_line_total
-        // [79] => get_item_tax
-        // [80] => get_line_tax
-        // [81] => get_shipping_method
-        // [82] => get_formatted_line_subtotal
-        // [83] => get_order_currency
-        // [84] => get_subtotal_to_display
-        // [85] => get_shipping_to_display
-        // [86] => get_discount_to_display
-        // [87] => get_cart_discount_to_display
-        // [88] => get_product_from_item
-        // [89] => get_order_item_totals
-        // [90] => email_order_items_table
-        // [91] => is_paid
-        // [92] => is_download_permitted
-        // [93] => has_downloadable_item
-        // [94] => has_free_item
-        // [95] => get_checkout_payment_url
-        // [96] => get_checkout_order_received_url
-        // [97] => get_cancel_order_url
-        // [98] => get_cancel_order_url_raw
-        // [99] => get_cancel_endpoint
-        // [100] => get_view_order_url
-        // [101] => get_item_downloads
-        // [102] => display_item_downloads
-        // [103] => get_download_url
-        // [104] => add_order_note
-        // [105] => update_status
-        // [106] => cancel_order
-        // [107] => payment_complete
-        // [108] => record_product_sales
-        // [109] => get_used_coupons
-        // [110] => increase_coupon_usage_counts
-        // [111] => decrease_coupon_usage_counts
-        // [112] => reduce_order_stock
-        // [113] => send_stock_notifications
-        // [114] => get_customer_order_notes
-        // [115] => needs_payment
-        // [116] => needs_shipping_address
-        // [117] => is_editable
 
-        $data = $order->get_data();
+        $this->connect_to_mailchimp();
+
+        // $user = get_userdata( $user_id );
+
+        if( isset( $_POST['billing_email'] ) ){
+            $billing_email = sanitize_email( $_POST['billing_email'] );
+        }else{
+            return false;
+        }
+
+        $merge_fields = $this->get_merge_fields( $user_id );
+
 
         //ASTODO This should be in it's own method $this->log();
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
@@ -473,35 +365,32 @@ class UltimateMailChimpPlugin {
             $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp.log', Logger::DEBUG));
             $logger->info( '-------- Order placed --------' );
             $logger->info( 'Order ID: ' . $order_id );
-            $logger->info( 'Order object: ', $data );
+            $logger->info( 'Merge fields: ', $merge_fields );
+            $logger->info( 'Timestamp: '. $date->getTimestamp() );
 
         }
 
-    die();
 
 
-        $this->connect_to_mailchimp();
 
-        $user = get_userdata( $user_id );
-        $email_address = $user->data->user_email;
-        $merge_fields = $this->get_merge_fields( $user );
-        $subscriber_hash = $this->MailChimp->subscriberHash( $email_address );
+
+        $subscriber_hash = $this->MailChimp->subscriberHash( $billing_email );
+
 
         // Use PUT to insert or update a record
         $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
-           'email_address' => $email_address,
+           'email_address' => $billing_email,
            'merge_fields' => $merge_fields,
            'status' => $user_status,
-           'timestamp_opt' => $user->data->user_registered
+           'timestamp_opt' => (string)$date->getTimestamp()
         ]);
 
 
-        die();
 
         //ASTODO get this into a $this->log file
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
-            $logger->info( 'Updating this Email address: ' . $email_address );
+            $logger->info( 'Updating this Email address: ' . $billing_email );
             $logger->info( 'Updating to these Merge fields', $merge_fields );
             $logger->info( 'Updating to this status: ' . $user_status );
 
@@ -510,6 +399,7 @@ class UltimateMailChimpPlugin {
                 $logger->info( 'Mailchimp response - merge fields', $result['merge_fields'] );
             } else {
                 $logger->info( 'Mailchimp error: ' . $this->MailChimp->getLastError() );
+                $logger->info( 'Mailchimp response: ' , $this->MailChimp->getLastResponse() );
             }
         }
         // }
@@ -517,6 +407,7 @@ class UltimateMailChimpPlugin {
         if ( defined('ULTIMATE_MAILCHIMP_DEBUG') ) {
             die( 'YOU ARE IN DEBUG MODE! Mailchimp has been updated' );
         };
+
     }
 
     /**

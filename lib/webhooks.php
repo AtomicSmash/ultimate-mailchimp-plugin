@@ -1,6 +1,6 @@
 <?php
 
-//placeholder for webhook work
+//placeholder for future webhook work
 
 public function webhook() {
 
@@ -32,3 +32,11 @@ public function generate_webhook_url() {
     WP_CLI::line( "Your NEW webhook url is: " . WP_CLI::colorize( "%G" . get_bloginfo('url') . "/wp-json/ultimate-mailchimp/v1/?key=" . $new_key . "%n" ));
 
 }
+
+// Setup webhook REST API ednpoint
+// add_action( 'rest_api_init', function () {
+//     register_rest_route( 'ultimate-mailchimp/v1', '/webhook', array(
+//         'methods' => 'POST',
+//         'callback' => array( $this, 'webhook' )
+//     ));
+// });
