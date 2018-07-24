@@ -52,7 +52,7 @@ class UltimateMailChimpPlugin {
 
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
 
-            add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
+            // add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
 
             //ASTODO there needs to be a check to make sure WooCommerce is available
             add_action( 'woocommerce_checkout_after_terms_and_conditions', array( $this, 'add_woocommerce_checkout_custom_fields' ) );

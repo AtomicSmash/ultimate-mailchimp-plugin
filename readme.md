@@ -1,18 +1,13 @@
-# Ultimate MailChimp plugin - WooCommerce MailChimp signups
-## v0.0.1
-### This plugin may break your site 💀 or MailChimp account 💀💀💀. Please only use in development environments.
+# Ultimate MailChimp Plugin - v0.0.1
+## WooCommerce MailChimp signups
+### This plugin may break your site 💀 or MailChimp account 💀💀💀.
+### Please only use in development environments.
 
 ![woocommerce-signup](https://user-images.githubusercontent.com/1636310/42940662-3559c458-8b52-11e8-8c8a-c036d31d4cd1.png)
 
-## Plugin principles and functionality
-
-These are the simple principles of how the plugin functions.
-
-### Single source of truth
+### Plugin functionality
 
 No record of the whether the user is subscribed to MailChimp is actually stored inside WordPress. When a user completes a transaction an API call is fired to MailChimp to send this information. We usually find if the user's MailChimp subscription status is stored somewhere that isn't MailChimp itself, then a method of syncing needs to be created and maintained. So we kept it simple and removed this requirement.
-
-If your site does need to know a user's subscription status then use the API and query MailChimp directly when required.
 
 ### Subscription signup on WooCommerce purchase
 
@@ -22,24 +17,26 @@ All of this text in editable via the available via [these filters](https://githu
 
 ### Transactional data
 
-Currently, this plugin doesn't handle syncing of transactional data. It will do in the future.
+Currently, this plugin doesn't handle syncing of transactional data. It **will** in the future.
 
 ## Features
 
-- Bulk sync users from WordPress to MailChimp
 - GDPR compliant newsletter description built in
 
 ## Merge fields
 
-These merge fields are sent by default.
+These merge fields are sent by default are:
+
+```
+**FNAME** - This is taken from the first name in the billing details.
+**LNAME** - This is taken from the last name in the billing details.
+```
 
 ## When are user details get sent to MailChimp?
 
 The plugin hooks into these actions to update MailChimp:
 
-- `user_register` : This is a global hook that is fired when a user is created inside WordPress. This means it's fired from the frontend registration form, backend user addition screen, any plugin or custom script used to register users and almost anything in between.
-
-- `woo`
+- `woocommerce_checkout_update_order_meta`:  This is fired after a successful order via WooCommerce.
 
 ## Setup
 
@@ -91,7 +88,9 @@ Here are some extra config options. We would recommend only using these in a dev
 
 ## Upcoming features
 
-- Send transactional info with purchases
-  - Sync products / store information
-- Add shortcode and snippet for loading the signup form
-- Seperate dev (monolog) requirements inside composer file
+- [ ] Bulk sync users from WordPress to MailChimp
+- [ ] Send transactional info with purchases
+  - [ ] Sync products / store information
+- [ ] Add shortcode and snippet for loading the signup form
+- [ ] Seperate dev (monolog) requirements inside composer file
+- [ ] Add `user_register` : This is a global hook that is fired when a user is created inside WordPress. This means it's fired from the frontend registration form, backend user addition screen, any plugin or custom script used to register users and almost anything in between.
