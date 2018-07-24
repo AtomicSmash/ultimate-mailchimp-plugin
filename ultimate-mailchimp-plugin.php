@@ -50,37 +50,15 @@ class UltimateMailChimpPlugin {
         // add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
         // add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
 
-        // run new_user_created after standard user registration and ___ after woo commerce version
-
-        // Run when a new user is created
-        //
-        //
-
-
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
 
             add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
 
-            // add_action('woocommerce_order_status_completed', 'open_assessment_after_payment');
-            //
-            // function open_assessment_after_payment($order_id) {
-
-
             //ASTODO there needs to be a check to make sure WooCommerce is available
-            // Add mailchimp newsletter to checkout
             add_action( 'woocommerce_checkout_after_terms_and_conditions', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
             add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'update_user_after_order' ), 10, 2 );
-            // add_action( 'woocommerce_order_status_completed', array( $this, 'update_user_after_order' ) );
-            // add_action( 'woocommerce_checkout_update_user_meta', array( $this, 'update_user_after_order' ), 10, 2 );
-
-            // function mysite_woocommerce_order_status_completed( $order_id ) {
-            //     error_log( "Order complete for order $order_id", 0 );
-            // }
-            // add_action( 'woocommerce_order_status_completed', 'mysite_woocommerce_order_status_completed', 10, 1 );
-
 
         }
-
 
     }
 
@@ -155,6 +133,8 @@ class UltimateMailChimpPlugin {
 
     public function sync_users( $args, $assoc_args ) {
 
+        //ASTODO add number overriding
+
         $args = array(
 
         	// 'role'         => '',
@@ -185,9 +165,6 @@ class UltimateMailChimpPlugin {
 
     }
 
-
-
-
     private function connect_to_mailchimp(){
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
             $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
@@ -195,6 +172,7 @@ class UltimateMailChimpPlugin {
             WP_CLI::error( "Constants are not defined" );
         }
     }
+
 
     private function is_user_on_mailchimp_list( $user_email = "" ){
 
@@ -209,12 +187,6 @@ class UltimateMailChimpPlugin {
         }
 
     }
-
-    // private function should_user_be_synced( $user_email = "" ){
-
-        //ASTODO Work on a conditional here to per user checking
-
-    // }
 
     private function get_merge_fields( $user_id ){
 
