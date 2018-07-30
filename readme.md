@@ -29,7 +29,7 @@ These merge fields are sent by default are:
 **LNAME** - This is taken from the last name in the billing details.
 ```
 
-## When are user details get sent to MailChimp?
+## When do user details get sent to MailChimp?
 
 The plugin hooks into these actions to update MailChimp:
 
