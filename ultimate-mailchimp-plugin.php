@@ -314,7 +314,6 @@ class UltimateMailChimpPlugin {
 
         $date = new DateTime();
 
-
         $this->connect_to_mailchimp();
 
         // $user = get_userdata( $user_id );
@@ -326,7 +325,6 @@ class UltimateMailChimpPlugin {
         }
 
         $merge_fields = $this->get_merge_fields( $user_id );
-
 
         //ASTODO This should be in it's own method $this->log();
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
@@ -345,13 +343,25 @@ class UltimateMailChimpPlugin {
         $subscriber_hash = $this->MailChimp->subscriberHash( $billing_email );
 
 
+
+        $marketing_preferences = array(
+            [
+                'marketing_permission_id' => 'e4a360d5ae',
+                'text' => 'Email',
+                'enabled' => true
+            ]
+        );
+
+
         // Use PUT to insert or update a record
         $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
            'email_address' => $billing_email,
            'merge_fields' => $merge_fields,
+           'marketing_permissions' => $marketing_preferences,
            'status' => $user_status,
            'timestamp_opt' => (string)$date->getTimestamp()
         ]);
+
 
         //ASTODO get this into a $this->log file
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {

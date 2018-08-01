@@ -19,15 +19,8 @@ Currently, this plugin doesn't handle syncing of transactional data. It **will**
 ## Features
 
 - GDPR compliant newsletter description built in
+- Send custom merge fields to Mailchimp
 
-## Merge fields
-
-These merge fields are sent by default are:
-
-```
-**FNAME** - This is taken from the first name in the billing details.
-**LNAME** - This is taken from the last name in the billing details.
-```
 
 ## When do user details get sent to MailChimp?
 
@@ -81,6 +74,17 @@ define('ULTIMATE_MAILCHIMP_DEBUG', true);
 
 `ULTIMATE_MAILCHIMP_DEBUG` - When in debug mode, WooCommerce checkout will not complete (There will be a JSON error) yet MailChimp will be called. This allows you to run through the checkout process without having to create a new order each time.
 
+
+## Merge fields
+
+These merge fields are sent by default are:
+
+```
+**FNAME** - This is taken from the first name in the billing details.
+**LNAME** - This is taken from the last name in the billing details.
+```
+
+To edit the merge fields sent to MailChimp, use the [merge field filter here](https://github.com/AtomicSmash/ultimate-mailchimp-plugin/wiki/Filters).
 
 ## Available filters
 
