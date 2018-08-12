@@ -118,3 +118,18 @@ public function get_batches( $cli_args = array() ){
     }
 
 }
+
+
+private function is_user_on_mailchimp_list( $user_email = "" ){
+
+    $subscriber_hash = $this->MailChimp->subscriberHash( $user_email );
+
+    $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash );
+
+    if($result['status'] == '404'){
+        return false;
+    }else{
+        return true;
+    }
+
+}

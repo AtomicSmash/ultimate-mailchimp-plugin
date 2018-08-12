@@ -63,8 +63,6 @@ class UltimateMailChimpPlugin {
 
     }
 
-
-
     private function connect_to_mailchimp(){
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
             $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
@@ -84,14 +82,12 @@ class UltimateMailChimpPlugin {
 
     }
 
-    public function new_user_created( $user_id ) {
-
-        // Sync the new user
-        $this->update_single_user( $user_id );
-
-    }
-
-
+    // public function new_user_created( $user_id ) {
+    //
+    //     // Sync the new user
+    //     $this->update_single_user( $user_id );
+    //
+    // }
 
     //ASTODO move this to the CLI file
     public function sync_marketing_permission_fields( $args, $assoc_args ) {
@@ -136,9 +132,7 @@ class UltimateMailChimpPlugin {
                     update_option( 'um_permission_fields', $fields, 0 );
 
                 }else{
-
                     WP_CLI::line( "NO marketing permission fields found :(" );
-
                 }
 
 
@@ -152,21 +146,6 @@ class UltimateMailChimpPlugin {
 
     }
 
-
-
-    private function is_user_on_mailchimp_list( $user_email = "" ){
-
-        $subscriber_hash = $this->MailChimp->subscriberHash( $user_email );
-
-        $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash );
-
-        if($result['status'] == '404'){
-            return false;
-        }else{
-            return true;
-        }
-
-    }
 
     private function get_merge_fields( $user_id ){
 
@@ -185,20 +164,6 @@ class UltimateMailChimpPlugin {
         }
 
 
-        // See if there are
-        // if( count( $existing_merge_fields ) > 0 ){
-        //
-        // }else{
-            // $first_name = get_user_meta( $user_id, 'first_name', true );
-            // $last_name = get_user_meta( $user_id, 'last_name', true );
-            //
-            // $merge_fields = array(
-            //     'FNAME' => $first_name,
-            //     'LNAME' => $last_name
-            // );
-        // }
-
-
         $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user_id );
 
         return $merge_fields;
@@ -207,7 +172,7 @@ class UltimateMailChimpPlugin {
 
 
 
-    private function update_single_user( $order_id = 0, $user_status = 'subscribed' ){
+    private function update_single_user( $order_id = 0, $user_status = 'subscribed', $marketing_preferences = array() ){
 
         $order = wc_get_order( $order_id );
 
@@ -244,15 +209,6 @@ class UltimateMailChimpPlugin {
 
         $subscriber_hash = $this->MailChimp->subscriberHash( $billing_email );
 
-
-
-        $marketing_preferences = array(
-            [
-                'marketing_permission_id' => 'e4a360d5ae',
-                'text' => 'Email',
-                'enabled' => true
-            ]
-        );
 
 
         //ASTODO check 'marketing_permissions' on the api /list/ID -> marketing_permissions
@@ -314,16 +270,16 @@ class UltimateMailChimpPlugin {
 
             echo "<p>$paragraph_one</p>";
 
-            $perission_fields = get_option( 'um_permission_fields' );
+            $permission_fields = get_option( 'um_permission_fields' );
 
             // If markerting permission are set, show those fields
-            if( $perission_fields != "" ){
-                foreach( $perission_fields as $perission_field ){
+            if( $permission_fields != "" ){
+                foreach( $permission_fields as $permission_field ){
 
-                    woocommerce_form_field( 'ultimate_mc_wc_checkbox__' . $perission_field['marketing_permission_id'], array(
+                    woocommerce_form_field( 'ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id'], array(
                         'type'          => 'checkbox',
                         'class'         => array( 'input-checkbox' ),
-                        'label'         => $perission_field['text'],
+                        'label'         => $permission_field['text'],
                         'required'  => false,
                     ), 0);
 
@@ -345,60 +301,55 @@ class UltimateMailChimpPlugin {
 
 
     function update_user_after_order( $order_id, $data ) {
-        // die($order_id);
 
+        $permission_fields = get_option( 'um_permission_fields' );
 
+        // If markerting permission are set, show those fields
+        if( $permission_fields != "" ){
 
+            $user_status = 'unsubscribed';
 
+            foreach( $permission_fields as $key => $permission_field ){
 
-        //ASTODO think about guest checkout :/
+                if( isset( $_POST['ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id']] ) ){
+                    $permission_fields[$key]['enabled'] = 1;
 
-        // $user = wp_get_current_user();
-        // $user_id = $user->ID;
+                    if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
+                        $user_status = 'subscribed';
+                    }else{
+                        $user_status = 'pending';
+                    }
 
-        // if ( $user_id != 0 ) {
-        //     if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
-        //         update_user_meta( $user_id, 'ultimate_mc_signup', true );
-        //     }else{
-        //         update_user_meta( $user_id, 'ultimate_mc_signup', false );
-        //     }
-        // };
-        // <pre>Array
-        // (
-        //     [terms] => 1
-        //     [createaccount] => 0
-        //     [payment_method] => cheque
-        //     [shipping_method] =>
-        //     [ship_to_different_address] =>
-        //     [billing_first_name] => David
-        //     [billing_last_name] => Darke
-        //     [billing_company] => Atomic Smash
-        //     [billing_email] => david@atomicsmash.co.uk
-        //     [billing_phone] => 2321312
-        //     [billing_country] => GB
-        //     [billing_address_1] => Flat 4,
-        //     [billing_address_2] => 4 Saville Place,
-        //     [billing_city] => Bristol
-        //     [billing_state] => Avon
-        //     [billing_postcode] => BS8 4EJ
-        //     [order_comments] =>
-        // )
-        // </pre>
-
-
-        if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
-
-            if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
-                $user_status = 'subscribed';
-            }else{
-                $user_status = 'pending';
+                }else{
+                    $permission_fields[$key]['enabled'] = 0;
+                }
             }
 
-            $this->update_single_user( $order_id, $user_status ); // options: subscribed - unsubscribed - cleaned - pending
         }else{
-            // $status = 'unsubscribed' // options: subscribed - unsubscribed - cleaned - pending
+
+            // if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
+            //
+            //     if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
+            //         $user_status = 'subscribed';
+            //     }else{
+            //         $user_status = 'pending';
+            //     }
+            //
+            //     // $this->update_single_user( $order_id, $user_status ); // options: subscribed - unsubscribed - cleaned - pending
+            // }else{
+            //     // $status = 'unsubscribed' // options: subscribed - unsubscribed - cleaned - pending
+            // }
+
         }
 
+
+
+        if( $user_status == 'subscribed' || $user_status == 'pending'){
+            $this->update_single_user( $order_id, $user_status, $permission_fields); // options: subscribed - unsubscribed - cleaned - pending
+        }
+
+
+        die('-');
 
 
     }
