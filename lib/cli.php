@@ -133,3 +133,60 @@ private function is_user_on_mailchimp_list( $user_email = "" ){
     }
 
 }
+
+
+public function sync_marketing_permission_fields( $args, $assoc_args ) {
+
+    WP_CLI::line( "Connecting to MailChimp" );
+
+    $this->connect_to_mailchimp();
+
+    // Get the first member that exists, we only need one to find the marketing field information.
+    $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members", [
+       'count' => 1
+    ]);
+
+
+    if( $this->MailChimp->success() ) {
+
+        if( count( $result['members'] ) > 0 ){
+
+            if( count( $result['members'][0]['marketing_permissions'] ) > 0 ){
+
+                WP_CLI::line( count( $result['members'][0]['marketing_permissions'] ) . " marketing permission fields found" );
+                WP_CLI::line( "" );
+
+                $fields = array();
+
+                foreach( $result['members'][0]['marketing_permissions'] as $key => $field ){
+
+                    WP_CLI::line( "Field " . ( $key + 1 ) );
+
+                    WP_CLI::line( "  Marketing permission ID | marketing_permission_id = " . $field['marketing_permission_id'] );
+                    WP_CLI::line( "  Marketing permission TEXT | text = " . $field['text'] );
+
+                    $fields[$key]['marketing_permission_id'] = $field['marketing_permission_id'];
+                    $fields[$key]['text'] = $field['text'];
+
+                }
+
+                WP_CLI::line( "" );
+
+                WP_CLI::success( "Updated copy of permission fields" );
+
+                update_option( 'um_communication_permission_fields', $fields, 0 );
+
+            }else{
+                WP_CLI::line( "NO marketing permission fields found :(" );
+            }
+
+
+        }else{
+            WP_CLI::error( "NO marketing permission fields found :(" );
+        }
+
+    } else {
+        WP_CLI::error( "There was an issue connecting to MailChimp" );
+    }
+
+}

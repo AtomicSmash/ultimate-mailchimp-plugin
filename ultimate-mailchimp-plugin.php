@@ -34,7 +34,7 @@ class UltimateMailChimpPlugin {
         // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
-                WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $this, 'sync_marketing_permission_fields' ) );
+                // WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $this, 'sync_marketing_permission_fields' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
@@ -82,17 +82,8 @@ class UltimateMailChimpPlugin {
 
     }
 
-    // public function new_user_created( $user_id ) {
-    //
-    //     // Sync the new user
-    //     $this->update_single_user( $user_id );
-    //
-    // }
-
     //ASTODO move this to the CLI file
-    public function sync_marketing_permission_fields( $args, $assoc_args ) {
-
-        WP_CLI::line( "Connecting to MailChimp" );
+    public function update_communication_preference_options() {
 
         $this->connect_to_mailchimp();
 
@@ -101,47 +92,36 @@ class UltimateMailChimpPlugin {
            'count' => 1
         ]);
 
-
         if( $this->MailChimp->success() ) {
 
             if( count( $result['members'] ) > 0 ){
 
                 if( count( $result['members'][0]['marketing_permissions'] ) > 0 ){
 
-                    WP_CLI::line( count( $result['members'][0]['marketing_permissions'] ) . " marketing permission fields found" );
-                    WP_CLI::line( "" );
-
                     $fields = array();
 
                     foreach( $result['members'][0]['marketing_permissions'] as $key => $field ){
-
-                        WP_CLI::line( "Field " . ( $key + 1 ) );
-
-                        WP_CLI::line( "  Marketing permission ID | marketing_permission_id = " . $field['marketing_permission_id'] );
-                        WP_CLI::line( "  Marketing permission TEXT | text = " . $field['text'] );
 
                         $fields[$key]['marketing_permission_id'] = $field['marketing_permission_id'];
                         $fields[$key]['text'] = $field['text'];
 
                     }
 
-                    WP_CLI::line( "" );
+                    update_option( 'um_communication_permission_fields', $fields, 0 );
 
-                    WP_CLI::success( "Updated copy of permission fields" );
-
-                    update_option( 'um_permission_fields', $fields, 0 );
+                    return $fields;
 
                 }else{
-                    WP_CLI::line( "NO marketing permission fields found :(" );
+                    // WP_CLI::line( "NO marketing permission fields found :(" );
                 }
 
 
             }else{
-                WP_CLI::error( "NO marketing permission fields found :(" );
+                // WP_CLI::error( "NO marketing permission fields found :(" );
             }
 
         } else {
-            WP_CLI::error( "There was an issue connecting to MailChimp" );
+            // WP_CLI::error( "There was an issue connecting to MailChimp" );
         }
 
     }
@@ -258,22 +238,27 @@ class UltimateMailChimpPlugin {
 
         //ASTODO add logic to detect if the user is current signed up to the newsletter
 
+        $permission_fields = get_option( 'um_communication_permission_fields' );
+
+        if( $permission_fields == "" ){
+
+            $permission_fields = $this->update_communication_preference_options();
+        };
+
         $newsletter_title = apply_filters( 'ul_mc_checkout_title', 'Marketing Permissions' );
 
         $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Sign me up to the MailChimp newsletter' );
 
         $paragraph_one = apply_filters( 'ul_mc_checkout_paragraph_one', 'We use MailChimp as our marketing automation platform. By clicking below to submit this form, you acknowledge that the information you provide will be transferred to MailChimp for processing in accordance with their Privacy Policy and Terms. We will use the information you provide on this form to be in touch with you and to provide updates and marketing. Please let us know all the ways you would like to hear from us:' );
 
-        $paragraph_two = apply_filters( 'ul_mc_checkout_paragraph_two', 'You can change your mind at any time by clicking the unsubscribe link in the footer of any email you receive from us, or by contacting us at EMAIL. We will treat your information with respect. For more information about our privacy practices please visit our website. By clicking below, you agree that we may process your information in accordance with these terms.' );
+        $paragraph_two = apply_filters( 'ul_mc_checkout_paragraph_two', 'You can change your mind at any time by clicking the unsubscribe link in the footer of any email you receive from us, or by contacting us directly. We will treat your information with respect. For more information about our privacy practices please visit our website. By clicking below, you agree that we may process your information in accordance with these terms.' );
 
         echo '<div id="ultimate_mc_wc_signup"><h2>' . __( $newsletter_title ) . '</h2>';
 
             echo "<p>$paragraph_one</p>";
 
-            $permission_fields = get_option( 'um_permission_fields' );
-
             // If markerting permission are set, show those fields
-            if( $permission_fields != "" ){
+            // if( $permission_fields != "" ){
                 foreach( $permission_fields as $permission_field ){
 
                     woocommerce_form_field( 'ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id'], array(
@@ -284,14 +269,14 @@ class UltimateMailChimpPlugin {
                     ), 0);
 
                 }
-            }else{
-                woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
-                    'type'          => 'checkbox',
-                    'class'         => array( 'input-checkbox' ),
-                    'label'         => __( $checkbox_label ),
-                    'required'  => false,
-                ), 0);
-            }
+            // }else{
+                // woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
+                //     'type'          => 'checkbox',
+                //     'class'         => array( 'input-checkbox' ),
+                //     'label'         => __( $checkbox_label ),
+                //     'required'  => false,
+                // ), 0);
+            // }
 
             echo "<p>$paragraph_two</p>";
 
@@ -302,7 +287,7 @@ class UltimateMailChimpPlugin {
 
     function update_user_after_order( $order_id, $data ) {
 
-        $permission_fields = get_option( 'um_permission_fields' );
+        $permission_fields = get_option( 'um_communication_permission_fields' );
 
         // If markerting permission are set, show those fields
         if( $permission_fields != "" ){
@@ -349,7 +334,7 @@ class UltimateMailChimpPlugin {
         }
 
 
-        die('-');
+        // die('-');
 
 
     }
