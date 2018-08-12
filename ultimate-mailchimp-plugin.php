@@ -34,7 +34,7 @@ class UltimateMailChimpPlugin {
         // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
-                WP_CLI::add_command( 'ultimate-mailchimp marketing-permissions-fields', array( $this, 'get_markerting_permission_fields_on_list' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $this, 'sync_marketing_permission_fields' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
@@ -94,7 +94,7 @@ class UltimateMailChimpPlugin {
 
 
     //ASTODO move this to the CLI file
-    public function get_markerting_permission_fields_on_list( $args, $assoc_args ) {
+    public function sync_marketing_permission_fields( $args, $assoc_args ) {
 
         WP_CLI::line( "Connecting to MailChimp" );
 
@@ -115,6 +115,8 @@ class UltimateMailChimpPlugin {
                     WP_CLI::line( count( $result['members'][0]['marketing_permissions'] ) . " marketing permission fields found" );
                     WP_CLI::line( "" );
 
+                    $fields = array();
+
                     foreach( $result['members'][0]['marketing_permissions'] as $key => $field ){
 
                         WP_CLI::line( "Field " . ( $key + 1 ) );
@@ -122,8 +124,16 @@ class UltimateMailChimpPlugin {
                         WP_CLI::line( "  Marketing permission ID | marketing_permission_id = " . $field['marketing_permission_id'] );
                         WP_CLI::line( "  Marketing permission TEXT | text = " . $field['text'] );
 
+                        $fields[$key]['marketing_permission_id'] = $field['marketing_permission_id'];
+                        $fields[$key]['text'] = $field['text'];
+
                     }
 
+                    WP_CLI::line( "" );
+
+                    WP_CLI::success( "Updated copy of permission fields" );
+
+                    update_option( 'um_permission_fields', $fields, 0 );
 
                 }else{
 
@@ -131,15 +141,13 @@ class UltimateMailChimpPlugin {
 
                 }
 
-                WP_CLI::error( "NO marketing permission fields found :(" );
 
+            }else{
+                WP_CLI::error( "NO marketing permission fields found :(" );
             }
 
         } else {
-
             WP_CLI::error( "There was an issue connecting to MailChimp" );
-
-
         }
 
     }
@@ -306,12 +314,28 @@ class UltimateMailChimpPlugin {
 
             echo "<p>$paragraph_one</p>";
 
-            woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
-                'type'          => 'checkbox',
-                'class'         => array( 'input-checkbox' ),
-                'label'         => __( $checkbox_label ),
-                'required'  => false,
-            ), 0);
+            $perission_fields = get_option( 'um_permission_fields' );
+
+            // If markerting permission are set, show those fields
+            if( $perission_fields != "" ){
+                foreach( $perission_fields as $perission_field ){
+
+                    woocommerce_form_field( 'ultimate_mc_wc_checkbox__' . $perission_field['marketing_permission_id'], array(
+                        'type'          => 'checkbox',
+                        'class'         => array( 'input-checkbox' ),
+                        'label'         => $perission_field['text'],
+                        'required'  => false,
+                    ), 0);
+
+                }
+            }else{
+                woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
+                    'type'          => 'checkbox',
+                    'class'         => array( 'input-checkbox' ),
+                    'label'         => __( $checkbox_label ),
+                    'required'  => false,
+                ), 0);
+            }
 
             echo "<p>$paragraph_two</p>";
 
