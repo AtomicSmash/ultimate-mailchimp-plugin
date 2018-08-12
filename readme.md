@@ -1,10 +1,28 @@
 # Ultimate MailChimp Plugin - v0.0.1
 ## WooCommerce MailChimp signups
-### This plugin may break your site 💀 or MailChimp account 💀💀💀. Please only use in development environments.
+### This plugin may break your site 💀 or even MailChimp account 💀💀💀. Please only use in development environments.
 
-### Plugin functionality
+## What does this plugin actually do?
 
-No record of the whether the user is subscribed to MailChimp is actually stored inside WordPress. When a user completes a transaction an API call is fired to MailChimp to send this information. We usually find if the user's MailChimp subscription status is stored somewhere that isn't MailChimp itself, then a method of syncing needs to be created and maintained. So we kept it simple and removed this requirement.
+On almost all of the WordPress sites that [Atomic Smash](https://www.atomicsmash.co.uk) makes, we do some form of MailChimp syncing. **Most** existing plugins rely on the need to record information within WP to then sync with MailChimp at a later point.
+
+We found this can become very cumbersome. List members may be able to interact with MailChimp from inside your site **OR** via the list communication preferences. This boils down to a member being able to unsubscribe without your WP site being involved. Of course, you can setup webhooks to notify your site when a change is made via MailChimp blah blah blah... **Keep it simple**, maintain MailChimp as the 'single source of truth' and forgot about needing to keep subscription preferences in line with the WP site.
+
+#### Data cleanliness
+
+Thanks to this separation, WordPress and MailChimp are completable replaceable in the future. 
+- If you need to move to a new CMS, everything is inside MailChimp all ready
+- If you need to move away from MailChimp, just export from MailChimp. There are no user artifacts on within Wordpress regarding their communication preferences.
+
+
+#### When does this plugin talk to MailChimp
+
+This plugin communicates with MailChimp when a user completes a WooCommerce transaction. Specifically this hook:
+
+- `woocommerce_checkout_update_order_meta`:  This is fired after a successful order via WooCommerce.
+
+**More points of interaction will be added in the future.**
+
 
 ### Subscription signup on WooCommerce purchase
 
@@ -12,23 +30,18 @@ Users will be presented with a description of MailChimp as a marketing platform 
 
 All of this text in editable via the available via [these filters](https://github.com/AtomicSmash/ultimate-mailchimp-plugin/wiki/Filters). 😎
 
-### Transactional data
-
-Currently, this plugin doesn't handle syncing of transactional data. It **will** in the future.
 
 ## Features
 
 - GDPR compliant newsletter description built in
-- Send custom merge fields to Mailchimp
+- Send custom merge fields to MailChimp
+
+## Upcoming features
+
+- Currently, this plugin doesn't handle syncing of transactional data. It **will** in the future.
 
 
-## When do user details get sent to MailChimp?
-
-The plugin hooks into these actions to update MailChimp:
-
-- `woocommerce_checkout_update_order_meta`:  This is fired after a successful order via WooCommerce.
-
-## Setup
+## Complete site setup
 
 ### Step 1 - Turn on WooCommerce terms and conditions
 

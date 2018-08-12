@@ -93,7 +93,7 @@ class UltimateMailChimpPlugin {
 
 
 
-
+    //ASTODO move this to the CLI file
     public function get_markerting_permission_fields_on_list( $args, $assoc_args ) {
 
         WP_CLI::line( "Connecting to MailChimp" );
