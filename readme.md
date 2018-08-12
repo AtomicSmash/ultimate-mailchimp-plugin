@@ -49,7 +49,7 @@ define('ULTIMATE_MAILCHIMP_API_KEY', '');
 
 `ULTIMATE_MAILCHIMP_API_KEY` - This is your key can be found in your account.
 
-### Step 3 - Configure opt-in (encouraged)
+### Step 3 - Enable double opt-in (encouraged)
 
 By default, when someone checks the "Sign me up to the MailChimp newsletter", the subscriber status is set to 'pending'. This will trigger a confirmation email from MailChimp.
 
@@ -61,7 +61,17 @@ If you would like to disable the double opt-in and force the user to be subscrib
 define('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN', false);
 ```
 
-### Bonus Config
+### Step 4 - GDPR fields
+
+MailChimp have added a series of 'marketing permission' (GDPR) fields to it's API. To be able to interact with these, we need a few pieces of information.
+
+- Field ID
+- Field Name
+- Field value (whether it should be checked or not)
+
+
+
+### Other Config
 
 Here are some extra config options. We would recommend only using these in a development or testing enviroment.
 

@@ -34,6 +34,7 @@ class UltimateMailChimpPlugin {
         // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
+                WP_CLI::add_command( 'ultimate-mailchimp marketing-permissions-fields', array( $this, 'get_markerting_permission_fields_on_list' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
                 // WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
@@ -62,6 +63,16 @@ class UltimateMailChimpPlugin {
 
     }
 
+
+
+    private function connect_to_mailchimp(){
+        if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
+            $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
+        }else{
+            WP_CLI::error( "Constants are not defined" );
+        }
+    }
+
     /**
      * Show a warning message for the fact the constants are not setup.
      *
@@ -80,98 +91,59 @@ class UltimateMailChimpPlugin {
 
     }
 
-    /**
-     * Add the new MailChimp options to the user edit form in the WordPress backend.
-     *
-     * @param object $user_id current user object available from the edit page.
-     *
-     * @return void nothing returned, just echoed HTML.
-     */
-    public function add_user_custom_fields( $user ) {
-        ?>
-        <h3><?php _e("Mailchimp syncing", "blank"); ?></h3>
-        <table class="form-table">
-            <tr>
-                <th><label for="address"><?php _e("Newsletter confirmation"); ?></label></th>
-                <td><fieldset>
-                    <label for="ultimate_mc_signup">
-                        <input type="checkbox" name="ultimate_mc_signup" id="ultimate_mc_signup"
-                            <?php if( get_the_author_meta( 'ultimate_mc_signup', $user->ID ) == true ){ echo "checked "; } ?> >
-                        <?php _e("If checked, the user has confirmed they would like to be added to your MailChimp list."); ?>
-                    </label>
-                    </fieldset>
-                </td>
-            </tr>
-        </table>
-        <?php
-
-        //ASTODO add a user sync button here
-    }
 
 
-    /**
-     * Save the 'Newsletter confirmation' meta field against the user
-     *
-     * @param object $user_id current user object available from the edit page
-     *
-     * @return void
-     */
-    public function save_user_custom_fields( $user_id ) {
 
-        if ( !current_user_can( 'edit_user', $user_id ) ) {
-            return false;
+    public function get_markerting_permission_fields_on_list( $args, $assoc_args ) {
+
+        WP_CLI::line( "Connecting to MailChimp" );
+
+        $this->connect_to_mailchimp();
+
+        // Get the first member that exists, we only need one to find the marketing field information.
+        $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members", [
+           'count' => 1
+        ]);
+
+
+        if( $this->MailChimp->success() ) {
+
+            if( count( $result['members'] ) > 0 ){
+
+                if( count( $result['members'][0]['marketing_permissions'] ) > 0 ){
+
+                    WP_CLI::line( count( $result['members'][0]['marketing_permissions'] ) . " marketing permission fields found" );
+                    WP_CLI::line( "" );
+
+                    foreach( $result['members'][0]['marketing_permissions'] as $key => $field ){
+
+                        WP_CLI::line( "Field " . ( $key + 1 ) );
+
+                        WP_CLI::line( "  Marketing permission ID | marketing_permission_id = " . $field['marketing_permission_id'] );
+                        WP_CLI::line( "  Marketing permission TEXT | text = " . $field['text'] );
+
+                    }
+
+
+                }else{
+
+                    WP_CLI::line( "NO marketing permission fields found :(" );
+
+                }
+
+                WP_CLI::error( "NO marketing permission fields found :(" );
+
+            }
+
+        } else {
+
+            WP_CLI::error( "There was an issue connecting to MailChimp" );
+
+
         }
 
-        if( $_POST['ultimate_mc_signup'] == 'on' ){
-            update_user_meta( $user_id, 'ultimate_mc_signup', true );
-        }else{
-            update_user_meta( $user_id, 'ultimate_mc_signup', false );
-        }
-
     }
 
-
-    public function sync_users( $args, $assoc_args ) {
-
-        //ASTODO add number overriding
-
-        $args = array(
-
-        	// 'role'         => '',
-        	// 'role__in'     => array(),
-        	// 'role__not_in' => array(),
-        	// 'meta_key'     => '',
-        	// 'meta_value'   => '',
-        	// 'meta_compare' => '',
-        	// 'meta_query'   => array(),
-        	// 'date_query'   => array(),
-        	// 'include'      => array(),
-        	// 'exclude'      => array(),
-        	// 'orderby'      => 'login',
-        	// 'order'        => 'ASC',
-        	// 'offset'       => '',
-        	// 'search'       => '',
-        	'number'       => -1,
-        	// 'count_total'  => false,
-        	// 'fields'       => 'all',
-        	// 'who'          => '',
-        );
-
-        //ASTODO add a filter to change the user args
-
-        $users = get_users( $args );
-
-        $this->send_batch_to_mailchimp( $users );
-
-    }
-
-    private function connect_to_mailchimp(){
-        if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
-            $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
-        }else{
-            WP_CLI::error( "Constants are not defined" );
-        }
-    }
 
 
     private function is_user_on_mailchimp_list( $user_email = "" ){
@@ -225,84 +197,6 @@ class UltimateMailChimpPlugin {
 
     }
 
-    private function send_batch_to_mailchimp( $users = array() ){
-
-        $this->connect_to_mailchimp();
-
-        $batch_process = $this->MailChimp->new_batch();
-
-        foreach( $users as $key => $user ){
-
-            // Generate an MD5 of the users email address
-            $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
-
-            $merge_fields = $this->get_merge_fields( $user );
-
-            // Use PUT to insert or update a record, put requires a hashed email address and
-            // a 'status_if_new' property for members who are new to the list
-            $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , [
-                'email_address' => $user->data->user_email,
-                'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
-                'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
-                'merge_fields' => $merge_fields
-            ] );
-
-        }
-
-
-        $result = $batch_process->execute();
-
-        echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
-
-    }
-
-
-    public function get_batches( $cli_args = array() ){
-
-        $this->connect_to_mailchimp();
-
-        if( ! isset( $cli_args[0] ) ) {
-
-            // ASTODO reduce number of batches displayed, maybe just show the last ten
-            $result = $this->MailChimp->get( "batches?count=100" );
-
-            if( $result != null ){
-                // Sort batch results by internal timestamp
-                usort( $result['batches'], function($a, $b){
-                    return strtotime( $b['submitted_at'] ) - strtotime( $a['submitted_at'] );
-                });
-
-                // Loop through all the returned batches and display details
-                if( count( $result['batches'] ) > 0 ){
-                    foreach( $result['batches'] as $batch ){
-                        WP_CLI::line( $batch['id'] . " | " . $batch['status'] . " | " . $this->time_ago( $batch['submitted_at'] ) );
-                    }
-                }
-            }else{
-
-                WP_CLI::line( "No batches found" );
-
-            }
-
-
-        }else{
-
-            if( strlen( $cli_args[0] ) != 10 ) {
-                WP_CLI::error( "Supplied batch ref doesn't look right 🤔" );
-            }
-
-            $result = $this->MailChimp->get( "batches/" . $cli_args[0] );
-
-            WP_CLI::line( "Status: " . $result[ 'status' ] );
-            WP_CLI::line( "Total operations: " . $result[ 'total_operations' ] );
-            WP_CLI::line( "Finished operations: " . $result[ 'finished_operations' ] );
-            WP_CLI::line( "Errored operations: " . $result[ 'errored_operations' ] );
-            WP_CLI::line( "Submitted at: " . $result[ 'submitted_at' ] );
-            WP_CLI::line( "Response download: " . $result[ 'response_body_url' ] );
-
-        }
-
-    }
 
 
     private function update_single_user( $order_id = 0, $user_status = 'subscribed' ){
@@ -352,6 +246,8 @@ class UltimateMailChimpPlugin {
             ]
         );
 
+
+        //ASTODO check 'marketing_permissions' on the api /list/ID -> marketing_permissions
 
         // Use PUT to insert or update a record
         $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
