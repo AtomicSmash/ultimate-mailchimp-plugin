@@ -171,7 +171,6 @@ class UltimateMailChimpPlugin {
             return false;
         }
 
-        $merge_fields = $this->get_merge_fields( $user_id );
 
         //ASTODO This should be in it's own method $this->log();
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
@@ -182,47 +181,56 @@ class UltimateMailChimpPlugin {
             $logger->pushHandler(new StreamHandler( $uploads_directory['basedir'] .'/ultimate-mailchimp.log', Logger::DEBUG));
             $logger->info( '-------- Order placed --------' );
             $logger->info( 'Order ID: ' . $order_id );
-            $logger->info( 'Merge fields: ', $merge_fields );
+            // $logger->info( 'Merge fields: ', $merge_fields );
             $logger->info( 'Timestamp: '. $date->getTimestamp() );
 
         }
 
+
         $subscriber_hash = $this->MailChimp->subscriberHash( $billing_email );
 
-
-
-        //ASTODO check 'marketing_permissions' on the api /list/ID -> marketing_permissions
-
-        // Use PUT to insert or update a record
-        $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", [
+        // Setup default data
+        $subscription_data = array(
            'email_address' => $billing_email,
-           'merge_fields' => $merge_fields,
-           'marketing_permissions' => $marketing_preferences,
            'status' => $user_status,
            'timestamp_opt' => (string)$date->getTimestamp()
-        ]);
+        );
 
+
+
+        if( $marketing_preferences != "" ){
+            $subscription_data['marketing_permissions'] = $marketing_preferences;
+        }
+
+
+        $subscription_data['merge_fields'] = $this->get_merge_fields( $user_id );
+
+        // Use PUT to insert or update a record
+        $result = $this->MailChimp->put( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/$subscriber_hash", $subscription_data);
 
         //ASTODO get this into a $this->log file
         if ( defined('ULTIMATE_MAILCHIMP_LOGGING') ) {
 
             $logger->info( 'Updating this Email address: ' . $billing_email );
-            $logger->info( 'Updating to these Merge fields', $merge_fields );
+            // $logger->info( 'Updating to these Merge fields', $merge_fields );
             $logger->info( 'Updating to this status: ' . $user_status );
 
             if( $this->MailChimp->success() ) {
                 $logger->info( 'Mailchimp sync SUCCESS' );
                 $logger->info( 'Mailchimp response - status: '. $result['status'] );
                 $logger->info( 'Mailchimp response - merge fields', $result['merge_fields'] );
+                echo "success";
             } else {
                 $logger->info( 'Mailchimp error: ' . $this->MailChimp->getLastError() );
                 $logger->info( 'Mailchimp response: ' , $this->MailChimp->getLastResponse() );
+                echo "error";
+
             }
         }
 
 
         if ( defined('ULTIMATE_MAILCHIMP_DEBUG') ) {
-            die( 'YOU ARE IN DEBUG MODE! Mailchimp has been updated' );
+            die( 'ULTIMATE_MAILCHIMP_DEBUG mode is enabled! Mailchimp has been updated but your order has not gone through' );
         };
 
     }
@@ -293,56 +301,51 @@ class UltimateMailChimpPlugin {
 
     function update_user_after_order( $order_id, $data ) {
 
+        $user_status = 'unsubscribed';  // options: subscribed - unsubscribed - cleaned - pending
+        $permission_fields = "";
 
-        die('-');
+        if ( defined('ULTIMATE_MAILCHIMP_GDPR_FIELDS') && ULTIMATE_MAILCHIMP_GDPR_FIELDS == true ) {
 
-        // if ( defined('ULTIMATE_MAILCHIMP_GDPR_FIELDS') && ULTIMATE_MAILCHIMP_GDPR_FIELDS == true ) {
+            $permission_fields = get_option( 'um_communication_permission_fields' );
 
-        $permission_fields = get_option( 'um_communication_permission_fields' );
+            if( count($permission_fields) > 0 ){
+                foreach( $permission_fields as $key => $permission_field ){
 
-        // If markerting permission are set, show those fields
-        if( $permission_fields != "" ){
+                    if( isset( $_POST['ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id']] ) ){
+                        $permission_fields[$key]['enabled'] = true;
 
-            $user_status = 'unsubscribed';
+                        if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
+                            $user_status = 'subscribed';
+                        }else{
+                            $user_status = 'pending';
+                        }
 
-            foreach( $permission_fields as $key => $permission_field ){
-
-                if( isset( $_POST['ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id']] ) ){
-                    $permission_fields[$key]['enabled'] = 1;
-
-                    if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
-                        $user_status = 'subscribed';
                     }else{
-                        $user_status = 'pending';
+                        $permission_fields[$key]['enabled'] = false;
                     }
-
-                }else{
-                    $permission_fields[$key]['enabled'] = 0;
                 }
             }
 
         }else{
 
-            // if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
-            //
-            //     if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
-            //         $user_status = 'subscribed';
-            //     }else{
-            //         $user_status = 'pending';
-            //     }
-            //
-            //     // $this->update_single_user( $order_id, $user_status ); // options: subscribed - unsubscribed - cleaned - pending
-            // }else{
-            //     // $status = 'unsubscribed' // options: subscribed - unsubscribed - cleaned - pending
-            // }
+            // If $_POST['ultimate_mc_wc_checkbox'] exists, it was ticked. There is on false value
+            if ( ! empty( $_POST['ultimate_mc_wc_checkbox'] ) ) {
+
+                if ( defined('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN') && ULTIMATE_MAILCHIMP_DOUBLE_OPTIN == false ) {
+                    $user_status = 'subscribed';
+                }else{
+                    $user_status = 'pending';
+                }
+
+            }
 
         }
 
+        // Only send user to MailChimp if they are subscribed or pending
+        // if( $user_status == 'subscribed' || $user_status == 'pending'){
+        // }
 
-
-        if( $user_status == 'subscribed' || $user_status == 'pending'){
-            $this->update_single_user( $order_id, $user_status, $permission_fields); // options: subscribed - unsubscribed - cleaned - pending
-        }
+        $this->update_single_user( $order_id, $user_status, $permission_fields); // options: subscribed - unsubscribed - cleaned - pending
 
 
         // die('-');

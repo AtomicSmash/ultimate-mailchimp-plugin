@@ -35,6 +35,7 @@ All of this text in editable via the available via [these filters](https://githu
 - GDPR compliant newsletter description built in
 - Send custom merge fields to MailChimp
 - Interact with GDPR fields inside MailChimp
+- This plugin **only** syncs subscribed or pending users, if they are unsubscribed they never get sent to MC
 
 ## Complete site setup
 
