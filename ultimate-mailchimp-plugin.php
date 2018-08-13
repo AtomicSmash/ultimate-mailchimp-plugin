@@ -238,16 +238,19 @@ class UltimateMailChimpPlugin {
 
         //ASTODO add logic to detect if the user is current signed up to the newsletter
 
-        $permission_fields = get_option( 'um_communication_permission_fields' );
+        if ( defined('ULTIMATE_MAILCHIMP_GDPR_FIELDS') && ULTIMATE_MAILCHIMP_GDPR_FIELDS == true ) {
+            $permission_fields = get_option( 'um_communication_permission_fields' );
 
-        if( $permission_fields == "" ){
-
-            $permission_fields = $this->update_communication_preference_options();
-        };
+            if( $permission_fields == "" ){
+                $permission_fields = $this->update_communication_preference_options();
+            }
+        }else{
+            $permission_fields = "";
+        }
 
         $newsletter_title = apply_filters( 'ul_mc_checkout_title', 'Marketing Permissions' );
 
-        $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Sign me up to the MailChimp newsletter' );
+        $checkbox_label = apply_filters( 'ul_mc_checkout_checkbox_label', 'Subscribe to the MailChimp newsletter' );
 
         $paragraph_one = apply_filters( 'ul_mc_checkout_paragraph_one', 'We use MailChimp as our marketing automation platform. By clicking below to submit this form, you acknowledge that the information you provide will be transferred to MailChimp for processing in accordance with their Privacy Policy and Terms. We will use the information you provide on this form to be in touch with you and to provide updates and marketing. Please let us know all the ways you would like to hear from us:' );
 
@@ -258,7 +261,17 @@ class UltimateMailChimpPlugin {
             echo "<p>$paragraph_one</p>";
 
             // If markerting permission are set, show those fields
-            // if( $permission_fields != "" ){
+            if( $permission_fields == "" ){
+
+                woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
+                    'type'          => 'checkbox',
+                    'class'         => array( 'input-checkbox' ),
+                    'label'         => __( $checkbox_label ),
+                    'required'  => false,
+                ), 0);
+
+            }else{
+
                 foreach( $permission_fields as $permission_field ){
 
                     woocommerce_form_field( 'ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id'], array(
@@ -269,14 +282,7 @@ class UltimateMailChimpPlugin {
                     ), 0);
 
                 }
-            // }else{
-                // woocommerce_form_field( 'ultimate_mc_wc_checkbox', array(
-                //     'type'          => 'checkbox',
-                //     'class'         => array( 'input-checkbox' ),
-                //     'label'         => __( $checkbox_label ),
-                //     'required'  => false,
-                // ), 0);
-            // }
+            }
 
             echo "<p>$paragraph_two</p>";
 
@@ -286,6 +292,11 @@ class UltimateMailChimpPlugin {
 
 
     function update_user_after_order( $order_id, $data ) {
+
+
+        die('-');
+
+        // if ( defined('ULTIMATE_MAILCHIMP_GDPR_FIELDS') && ULTIMATE_MAILCHIMP_GDPR_FIELDS == true ) {
 
         $permission_fields = get_option( 'um_communication_permission_fields' );
 
