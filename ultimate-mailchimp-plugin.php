@@ -56,7 +56,7 @@ class UltimateMailChimpPlugin {
             // add_action( 'user_register', array( $this, 'new_user_created' ), 10, 1 );
 
             //ASTODO there needs to be a check to make sure WooCommerce is available
-            add_action( 'woocommerce_checkout_after_terms_and_conditions', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
+            add_action( 'woocommerce_review_order_before_payment', array( $this, 'add_woocommerce_checkout_custom_fields' ) );
             add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'update_user_after_order' ), 10, 2 );
 
         }
