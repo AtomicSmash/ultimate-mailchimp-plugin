@@ -14,7 +14,6 @@
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
 
-
 // If autoload exists... autoload it baby... (this is for plugin developemnt and sites not using composer to pull plugins)
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     require __DIR__ . '/vendor/autoload.php';
@@ -63,7 +62,7 @@ class UltimateMailChimpPlugin {
 
     }
 
-    private function connect_to_mailchimp(){
+    public function connect_to_mailchimp(){
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
             $this->MailChimp = new \DrewM\MailChimp\MailChimp( ULTIMATE_MAILCHIMP_API_KEY );
         }else{
@@ -143,7 +142,7 @@ class UltimateMailChimpPlugin {
             $merge_fields['LNAME'] = "";
         }
 
-
+        // Get extra fields defined by the user
         $merge_fields = apply_filters( 'ul_mc_custom_merge_fields', $merge_fields, $user_id );
 
         return $merge_fields;
@@ -151,7 +150,7 @@ class UltimateMailChimpPlugin {
     }
 
 
-
+    //ASTODO seperate this out so it's easier to use with out an order needed
     private function update_single_user( $order_id = 0, $user_status = 'subscribed', $marketing_preferences = array() ){
 
         $order = wc_get_order( $order_id );
@@ -202,7 +201,7 @@ class UltimateMailChimpPlugin {
             $subscription_data['marketing_permissions'] = $marketing_preferences;
         }
 
-
+        // Get standard first and last name merge fields, then any extras
         $subscription_data['merge_fields'] = $this->get_merge_fields( $user_id );
 
         // Use PUT to insert or update a record
