@@ -8,10 +8,10 @@ On almost all of the WordPress sites that [Atomic Smash](https://www.atomicsmash
 
 We found this can become very cumbersome. List members are able to interact with MailChimp outside of the website via the list communication preferences (or even by just unsubscribing from the list). This boils down to a member being able to change there details without your WP site being involved. Of course, you can setup webhooks to notify your site when a change is made via MailChimp blah blah blah... **BUT**... **Just keep it simple**. Maintain MailChimp as the 'single source of truth' and forgot about needing to keep subscription preferences in line with the WP site.
 
-#### Data cleanliness
-
 Thanks to this separation, WordPress and MailChimp are completable replaceable in the future.
+
 - If you need to move to a new CMS, everything is inside MailChimp already.
+
 - If you need to move away from MailChimp, just export from MailChimp. There are no user artefacts within your Wordpress site regarding user communication preferences.
 
 #### When does this plugin talk to MailChimp?
@@ -22,7 +22,7 @@ This plugin communicates with MailChimp at these points:
 
 **More points of interaction will be added in the future.**
 
-Know of another time you would like to talk to MailChimp? Please add an issue!
+Know of another time you would like to talk to MailChimp? Please add an issue! 😉
 
 ## Sign up form
 
@@ -39,7 +39,15 @@ All of this text in editable via the available via [these filters](https://githu
 
 ## Complete site setup
 
-### Step 1 - Add configs
+### Step 1 - Add project to your composer file
+
+Run this in the root of your project:
+
+```
+composer require atomicsmash/ultimate-mailchimp-plugin
+```
+
+### Step 2 - Add configs
 
 Add these config details to your `wp-config.php`
 
@@ -55,19 +63,13 @@ define('ULTIMATE_MAILCHIMP_GDPR_FIELDS', true);
 
 `ULTIMATE_MAILCHIMP_GDPR_FIELDS` -
 
-### Step 2 - Enable double opt-in in your MailChimp list (encouraged)
+### Step 3 - Enable double opt-in in your MailChimp list (encouraged)
 
 By default, when someone checks the "Sign me up to the MailChimp newsletter", the subscriber status is set to 'pending'. This will trigger a confirmation email from MailChimp.
 
-To make sure this functionality works. Go to your list > Settings > 'List name and campaign' and check the "Enable double opt-in" checkbox and save. [Like this](https://user-images.githubusercontent.com/1636310/43076417-1901cf3a-8e7c-11e8-8a8f-c5f0e63a0ff7.gif).
+To make sure this functionality is active, go to your primary list > Settings > 'List name and campaign' and check the "Enable double opt-in" checkbox and save. ![Like this](https://user-images.githubusercontent.com/1636310/43076417-1901cf3a-8e7c-11e8-8a8f-c5f0e63a0ff7.gif)
 
-If you would like to disable the double opt-in and force the user to be subscribed on sync, add this constant to your config and set to `false`.
-
-```
-define('ULTIMATE_MAILCHIMP_DOUBLE_OPTIN', false);
-```
-
-### Step 3 - GDPR fields
+### Step 4 - GDPR fields
 
 MailChimp have added a series of 'marketing permission' (GDPR) fields to it's API. To be able to interact with these, we need a few pieces of information.
 
@@ -89,6 +91,7 @@ define('ULTIMATE_MAILCHIMP_DEBUG', true);
 
 `ULTIMATE_MAILCHIMP_DEBUG` - When in debug mode, WooCommerce checkout will not complete (There will be a JSON error) yet MailChimp will be called. This allows you to run through the checkout process without having to create a new order each time.
 
+`ULTIMATE_MAILCHIMP_DOUBLE_OPTIN` - If you would like to disable the double opt-in and force the new users to be subscribed by default on sync, add this constant to your config and set to `false`.
 
 ## Merge fields
 
@@ -107,7 +110,6 @@ To edit the merge fields sent to MailChimp, use the [merge field filter here](ht
 
 ## Upcoming features
 
-- [ ] Currently, this plugin doesn't handle syncing of transactional data. It **will** in the future.
 - [ ] Bulk sync users from WordPress to MailChimp
 - [ ] Send transactional info with purchases
   - [ ] Sync products / store information
