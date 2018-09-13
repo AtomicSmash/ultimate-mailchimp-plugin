@@ -4,6 +4,13 @@
 // In fact, this file isn't even loaded.
 // But they may in the future ;)
 
+// Add custom fields to user profiles
+// add_action( 'show_user_profile', array( $this, 'add_user_custom_fields' ) );
+// add_action( 'edit_user_profile', array( $this, 'add_user_custom_fields' ) );
+
+// Save new user custom fields
+// add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
+// add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
 
 /**
  * Save the 'Newsletter confirmation' meta field against the user

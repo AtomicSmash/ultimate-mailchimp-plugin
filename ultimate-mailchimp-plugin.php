@@ -8,8 +8,6 @@
  * Text Domain:     testing
  * Domain Path:     /languages
  * Version:         0.0.1
- *
- * @package         Testing
  */
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
@@ -18,6 +16,8 @@ if (!defined('ABSPATH')) exit; //Exit if accessed directly
 if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
     require __DIR__ . '/vendor/autoload.php';
 }
+
+require __DIR__ . '/lib/cli.php';
 
 use \DrewM\MailChimp\MailChimp;
 use \DrewM\MailChimp\Batch;
@@ -30,25 +30,20 @@ class UltimateMailChimpPlugin {
 
     function __construct() {
 
+        $ultimate_mailchimp_cli = new UltimateMailChimpPluginCLI;
+
         // Setup CLI commands
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
-                // WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $this, 'sync_marketing_permission_fields' ) );
-                // WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users' ) );
-                // WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
-                // WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $this, 'generate_webhook_url' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $ultimate_mailchimp_cli, 'sync_marketing_permission_fields' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $ultimate_mailchimp_cli, 'sync_users' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $ultimate_mailchimp_cli, 'get_batches' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $ultimate_mailchimp_cli, 'generate_webhook_url' ) );
             }else{
-                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $this, 'setup_warning' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $ultimate_mailchimp_cli, 'setup_warning' ) );
             }
         }
 
-        // Add custom fields to user profiles
-        // add_action( 'show_user_profile', array( $this, 'add_user_custom_fields' ) );
-        // add_action( 'edit_user_profile', array( $this, 'add_user_custom_fields' ) );
-
-        // Save new user custom fields
-        // add_action( 'personal_options_update', array( $this, 'save_user_custom_fields' ) );
-        // add_action( 'edit_user_profile_update', array( $this, 'save_user_custom_fields' ) );
 
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
 
@@ -70,18 +65,9 @@ class UltimateMailChimpPlugin {
         }
     }
 
-    /**
-     * Show a warning message for the fact the constants are not setup.
-     *
-     * @return void
-     */
-    public function setup_warning() {
 
-        WP_CLI::line( "Config constants missing 🙁. Visit https://github.com/AtomicSmash/ultimate-mailchimp-plugin for a setup guide" );
-
-    }
-
-    //ASTODO move this to the CLI file
+    //ASTODO There is a duplicate in the cli
+    //ASTODO This might be better as a setup step?
     public function update_communication_preference_options() {
 
         $this->connect_to_mailchimp();
