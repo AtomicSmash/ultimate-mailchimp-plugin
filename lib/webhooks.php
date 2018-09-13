@@ -1,7 +1,7 @@
 <?php
 
 //placeholder for future webhook work
-
+// WP_CLI::add_command( 'ultimate-mailchimp generate-webhook-url', array( $ultimate_mailchimp_cli, 'generate_webhook_url' ) );
 public function webhook() {
 
     //ASTODO need to check if there is a key set
