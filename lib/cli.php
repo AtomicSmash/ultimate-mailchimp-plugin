@@ -18,51 +18,6 @@ class UltimateMailChimpPluginCLI extends UltimateMailChimpPlugin{
 
     }
 
-    public function sync_users( $args, $assoc_args ) {
-
-        //ASTODO add number overriding
-        $args = array(
-            'number'       => -1,
-        );
-
-        //ASTODO add a filter to change the user args
-
-        $users = get_users( $args );
-
-        $this->send_batch_to_mailchimp( $users );
-
-    }
-
-    private function send_batch_to_mailchimp( $users = array() ){
-
-        $this->connect_to_mailchimp();
-
-        $batch_process = $this->MailChimp->new_batch();
-
-        foreach( $users as $key => $user ){
-
-            // Generate an MD5 of the users email address
-            $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
-
-            $merge_fields = $this->get_merge_fields( $user );
-
-            // Use PUT to insert or update a record, put requires a hashed email address and
-            // a 'status_if_new' property for members who are new to the list
-            $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , [
-                'email_address' => $user->data->user_email,
-                'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
-                'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
-                'merge_fields' => $merge_fields
-            ] );
-
-        }
-
-
-        $result = $batch_process->execute();
-
-        echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
-
-    }
 
 
     public function get_batches( $cli_args = array() ){
@@ -111,20 +66,69 @@ class UltimateMailChimpPluginCLI extends UltimateMailChimpPlugin{
 
     }
 
+    public function sync_users( $args, $assoc_args ) {
 
-    private function is_user_on_mailchimp_list( $user_email = "" ){
+        //ASTODO add number overriding
+        $args = array(
+            'number'       => -1,
+        );
 
-        $subscriber_hash = $this->MailChimp->subscriberHash( $user_email );
+        //ASTODO add a filter to change the user args
 
-        $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash );
+        $users = get_users( $args );
 
-        if($result['status'] == '404'){
-            return false;
-        }else{
-            return true;
-        }
+        $this->send_batch_to_mailchimp( $users );
 
     }
+
+    private function send_batch_to_mailchimp( $users = array() ){
+
+        $this->connect_to_mailchimp();
+
+        $batch_process = $this->MailChimp->new_batch();
+
+        foreach( $users as $key => $user ){
+
+            // Generate an MD5 of the users email address
+            $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
+
+            $merge_fields = $this->get_merge_fields( $user );
+
+            // Use PUT to insert or update a record, put requires a hashed email address and
+            // a 'status_if_new' property for members who are new to the list
+            $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , [
+                'email_address' => $user->data->user_email,
+                'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
+                'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
+                'merge_fields' => $merge_fields
+            ] );
+
+        }
+
+
+        // $result = $batch_process->execute();
+
+        echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
+
+    }
+
+
+
+
+
+    // private function is_user_on_mailchimp_list( $user_email = "" ){
+    //
+    //     $subscriber_hash = $this->MailChimp->subscriberHash( $user_email );
+    //
+    //     $result = $this->MailChimp->get( "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash );
+    //
+    //     if($result['status'] == '404'){
+    //         return false;
+    //     }else{
+    //         return true;
+    //     }
+    //
+    // }
 
 
     // public function sync_marketing_permission_fields( $args, $assoc_args ) {

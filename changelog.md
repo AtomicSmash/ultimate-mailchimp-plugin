@@ -1,5 +1,6 @@
 = 0.0.2 =
-* Added CLI bulk sync commands
+* Added CLI bulk sync command
+* Added CLI bulk list command
 
 
 = 0.0.1 =
