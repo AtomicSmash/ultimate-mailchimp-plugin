@@ -36,7 +36,7 @@ class UltimateMailChimpPlugin {
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
                 // WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $ultimate_mailchimp_cli, 'sync_marketing_permission_fields' ) );
-                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $ultimate_mailchimp_cli, 'sync_users' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $ultimate_mailchimp_cli, 'sync_users_with_mailchimp' ) );
                 WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $ultimate_mailchimp_cli, 'get_batches' ) );
             }else{
                 WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $ultimate_mailchimp_cli, 'setup_warning' ) );
@@ -111,7 +111,7 @@ class UltimateMailChimpPlugin {
     }
 
 
-    private function get_merge_fields( $user_id ){
+    public function get_merge_fields( $user_id ){
 
         $merge_fields = array();
 
