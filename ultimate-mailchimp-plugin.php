@@ -7,7 +7,7 @@
  * Author URI:      atomicsmash.co.uk
  * Text Domain:     testing
  * Domain Path:     /languages
- * Version:         0.0.1
+ * Version:         0.0.2
  */
 
 if (!defined('ABSPATH')) exit; //Exit if accessed directly
@@ -31,17 +31,6 @@ class UltimateMailChimpPlugin {
     function __construct() {
 
         $ultimate_mailchimp_cli = new UltimateMailChimpPluginCLI;
-
-        // Setup CLI commands
-        if ( defined( 'WP_CLI' ) && WP_CLI ) {
-            if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
-                // WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $ultimate_mailchimp_cli, 'sync_marketing_permission_fields' ) );
-                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $ultimate_mailchimp_cli, 'sync_users_with_mailchimp' ) );
-                WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $ultimate_mailchimp_cli, 'get_batches' ) );
-            }else{
-                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $ultimate_mailchimp_cli, 'setup_warning' ) );
-            }
-        }
 
 
         if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {

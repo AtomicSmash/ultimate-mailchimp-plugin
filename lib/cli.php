@@ -5,6 +5,17 @@ class UltimateMailChimpPluginCLI extends UltimateMailChimpPlugin{
     // Present to overide parent __construct and not re-add cli commands
     function __construct() {
 
+        // Setup CLI commands
+        if ( defined( 'WP_CLI' ) && WP_CLI ) {
+            if ( defined( 'ULTIMATE_MAILCHIMP_API_KEY' ) && defined( 'ULTIMATE_MAILCHIMP_LIST_ID' ) ) {
+                // WP_CLI::add_command( 'ultimate-mailchimp sync-marketing-permissions-fields', array( $ultimate_mailchimp_cli, 'sync_marketing_permission_fields' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp sync-users', array( $this, 'sync_users_with_mailchimp' ) );
+                WP_CLI::add_command( 'ultimate-mailchimp show-batches', array( $this, 'get_batches' ) );
+            }else{
+                WP_CLI::add_command( 'ultimate-mailchimp please-setup-plugin', array( $this, 'setup_warning' ) );
+            }
+        }
+
     }
 
     /**
