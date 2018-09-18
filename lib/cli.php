@@ -57,26 +57,35 @@ class UltimateMailChimpPluginCLI extends UltimateMailChimpPlugin{
         $batch_process = $this->MailChimp->new_batch();
 
         foreach( $users as $key => $user ){
-            WP_CLI::line( "User:" . $user->ID );
+            WP_CLI::line( "Adding user " . $user->ID . " to batch");
 
             // Generate an MD5 of the users email address
             $subscriber_hash = $this->MailChimp->subscriberHash( $user->data->user_email );
 
             $merge_fields = $this->get_merge_fields( $user );
 
+            // echo "<pre>";
+            // print_r($merge_fields);
+            // echo "</pre>";
+
+            //ASTODO link this to $this->get_subscription_defaults()
+            $subscription_defaults = [
+                'email_address' => $user->data->user_email,
+                // 'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
+                // 'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
+                'merge_fields' => $merge_fields
+            ];
+
             // Use PUT to insert or update a record, put requires a hashed email address and
             // a 'status_if_new' property for members who are new to the list
-            $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , [
-                'email_address' => $user->data->user_email,
-                'status' => 'subscribed', // subscribed - unsubscribed - cleaned - pending
-                'status_if_new' => "subscribed", // subscribed - unsubscribed - cleaned - pending
-                'merge_fields' => $merge_fields
-            ] );
+            // ASTODO add a list helper function to bring back hash and list ID
+            $batch_process->put( "op" . $key , "lists/" . ULTIMATE_MAILCHIMP_LIST_ID . "/members/" . $subscriber_hash , $subscription_defaults );
 
         }
 
-        // $result = $batch_process->execute();
-        // echo WP_CLI::success( "Batch started | ID: " . $result['id'] );
+        $result = $batch_process->execute();
+        echo WP_CLI::success( "Batch started" );
+        echo WP_CLI::success( "Run 'wp ultimate-mailchimp show-batches " . $result['id'] . "' to see the status" );
 
     }
 

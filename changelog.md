@@ -1,7 +1,7 @@
 = 0.0.2 =
 * Added CLI bulk sync command
 * Added CLI bulk list command
-
+* Started on filterable subscription defaults
 
 = 0.0.1 =
 * Started the plugin structure, added a whole bunch of pre-existing MailChimp code

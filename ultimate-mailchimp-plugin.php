@@ -5,8 +5,6 @@
  * Description:     Sync to MailChimp like a pro
  * Author:          atomicsmash.co.uk
  * Author URI:      atomicsmash.co.uk
- * Text Domain:     testing
- * Domain Path:     /languages
  * Version:         0.0.2
  */
 
@@ -122,6 +120,13 @@ class UltimateMailChimpPlugin {
         return $merge_fields;
 
     }
+
+    public function get_subscription_defaults( ){
+
+        //ASTODO Add editable subscription array here
+
+    }
+
 
 
     //ASTODO seperate this out so it's easier to use with out an order needed
