@@ -7,3 +7,6 @@
 
 = 0.0.2 =
 * Fixed error if the communication permissions meta can not be retrieved
+
+= 0.0.3 =
+* Removed timestamp_opt setting

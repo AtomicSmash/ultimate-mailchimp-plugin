@@ -191,8 +191,7 @@ class UltimateMailChimpPlugin {
         // Setup default data
         $subscription_data = array(
            'email_address' => $billing_email,
-           'status' => $user_status,
-           'timestamp_opt' => (string)$date->getTimestamp()
+           'status' => $user_status
         );
 
 
