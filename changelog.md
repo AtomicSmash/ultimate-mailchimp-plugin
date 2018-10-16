@@ -4,3 +4,6 @@
 * Added form to Woocommerce checkout
 * Setup sync for marketing preferences
 * Works with lists that have GDPR fields enabled or not
+
+= 0.0.2 =
+* Fixed error if the communication permissions meta can not be retrieved

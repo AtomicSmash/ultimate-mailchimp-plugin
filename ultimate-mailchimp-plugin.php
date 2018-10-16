@@ -307,7 +307,7 @@ class UltimateMailChimpPlugin {
 
             $permission_fields = get_option( 'um_communication_permission_fields' );
 
-            if( count($permission_fields) > 0 ){
+            if( ! empty( $permission_fields ) && is_array( $permission_fields ) ) {
                 foreach( $permission_fields as $key => $permission_field ){
 
                     if( isset( $_POST['ultimate_mc_wc_checkbox__' . $permission_field['marketing_permission_id']] ) ){
