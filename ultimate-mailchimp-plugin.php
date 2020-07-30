@@ -7,7 +7,7 @@
  * Author URI:      atomicsmash.co.uk
  * Text Domain:     testing
  * Domain Path:     /languages
- * Version:         0.0.1
+ * Version:         0.0.4
  *
  * @package         Testing
  */
@@ -245,11 +245,8 @@ class UltimateMailChimpPlugin {
         //ASTODO add logic to detect if the user is current signed up to the newsletter
 
         if ( defined('ULTIMATE_MAILCHIMP_GDPR_FIELDS') && ULTIMATE_MAILCHIMP_GDPR_FIELDS == true ) {
-            $permission_fields = get_option( 'um_communication_permission_fields' );
-
-            if( $permission_fields == "" ){
-                $permission_fields = $this->update_communication_preference_options();
-            }
+            $this->update_communication_preference_options();
+            $permission_fields = get_option('um_communication_permission_fields');
         }else{
             $permission_fields = "";
         }
